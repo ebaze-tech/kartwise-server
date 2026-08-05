@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  BUSINESS_OWNER
+  BUYER
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  PUBLISHED
+  SENT
+  FAILED
+}
+
+model User {
+  id                String    @id @default(uuid())
+  username          String    
+  firstName         String
+  lastName          String
+  email             String    @unique
+  password          String
+  profilePictureUrl String?
+  role              Role
+  refreshToken      String?
+  otp               String?
+  otpExpiresAt      DateTime?
+
+  resetTokens PasswordResetToken[]
+  emailTokens EmailUpdateToken[]
+  sessions    Session[]
+  sentEmails  SentEmail[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([username])
+  @@index([email])
+  @@map("users")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([token, userId])
+  @@map("password_reset_tokens")
+}
+
+model EmailUpdateToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+  newEmail  String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([token, userId])
+  @@map("email_update_tokens")
+}
+
+model Otp {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  hashedOtp String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@map("otp")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  refreshToken String
+  expiresAt    DateTime
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model SentEmail {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  eventType String
+  recipient String
+  subject   String
+  body      String
+
+  status EmailStatus @default(PENDING)
+
+  attempts    Int @default(0)
+  maxAttempts Int @default(5)
+
+  lastAttemptAt DateTime?
+  sentAt        DateTime?
+
+  errorMessage String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([recipient])
+  @@map("sent_emails")
+}
+
+model Outbox {
+  id          String       @id @default(uuid())
+  topic       String
+  payload     Json
+  status      OutboxStatus @default(PENDING)
+  retryCount  Int          @default(0)
+  publishedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([status])
+  @@map("outbox")
+}
