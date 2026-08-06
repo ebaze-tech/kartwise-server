@@ -4,8 +4,6 @@ import { Transport } from '@nestjs/microservices';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-const configService = new ConfigService();
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
@@ -43,6 +41,7 @@ async function bootstrap() {
     }),
   );
 
+  await app.startAllMicroservices();
   await app.listen(process.env.PORT!);
 }
 
