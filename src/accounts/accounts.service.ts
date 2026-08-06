@@ -105,9 +105,7 @@ export class AccountsService {
     }
   }
 
-  async loginAccount(
-    loginAccountDto: LoginAccountDto,
-  ): Promise<{
+  async loginAccount(loginAccountDto: LoginAccountDto): Promise<{
     message: string;
     accessToken: string;
     refreshToken: string;
@@ -194,6 +192,22 @@ export class AccountsService {
         'Internal Server Error. Please try again',
       );
     }
+  }
+
+  async logoutAccount(sessionId: string) {
+    await this.prisma.$transaction(async (tx) => {
+      const session = await this.prisma.session.findUnique({
+        where: { id: sessionId },
+      });
+
+      if (!session) throw new NotFoundException('User session not found');
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: session.userId },
+      });
+
+      if(!user) throw new NotFoundException("User not found")
+    });
   }
 
   private async hashPassword(password: string): Promise<string> {
