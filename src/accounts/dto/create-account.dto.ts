@@ -20,15 +20,6 @@ export class CreateAccountDto {
   @Type(() => String)
   email!: string;
 
-  @IsNotEmpty({ message: 'Username is required' })
-  @IsString()
-  @Matches(/^[a-zA-Z0-9_-]{3,50}$/, {
-    message:
-      'Username must be between 3 and 50 characters long and can only contain letters, numbers, and underscores',
-  })
-  @Type(() => String)
-  username!: string;
-
   @IsNotEmpty({ message: 'Password is required' })
   @IsString()
   @Matches(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/, {
