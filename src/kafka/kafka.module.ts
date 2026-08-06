@@ -13,7 +13,7 @@ const configService = new ConfigService();
         transport: Transport.KAFKA,
         options: {
           client: {
-            clientId: 'kartly',
+            clientId: 'kartwise',
             brokers: [configService.get<string>('KAFKA_BROKER')!],
             ssl: true,
             sasl: {
@@ -27,7 +27,7 @@ const configService = new ConfigService();
             requestTimeout: 30000,
           },
           consumer: {
-            groupId: 'kartly-consumer',
+            groupId: 'kartwise-consumer',
           },
           producer: {
             createPartitioner: Partitioners.LegacyPartitioner,

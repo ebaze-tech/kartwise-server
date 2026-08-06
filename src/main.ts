@@ -15,7 +15,7 @@ async function bootstrap() {
     transport: Transport.KAFKA,
     options: {
       client: {
-        clientId: 'kartly',
+        clientId: 'kartwise',
         brokers: [configService.get<string>('KAFKA_BROKER')!],
         ssl: true,
         sasl: {
@@ -29,7 +29,7 @@ async function bootstrap() {
         requestTimeout: 30000,
       },
       consumer: {
-        groupId: 'kartly-notification-consumer',
+        groupId: 'kartwise-notification-consumer',
       },
     },
   });
