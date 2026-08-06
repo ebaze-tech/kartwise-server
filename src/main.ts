@@ -34,9 +34,16 @@ async function bootstrap() {
     },
   });
 
-  await app.startAllMicroservices();
+  app.setGlobalPrefix('api/v1');
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
-  await app.listen(3000);
+  await app.listen(process.env.PORT!);
 }
 
 bootstrap();
