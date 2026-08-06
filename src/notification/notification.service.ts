@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { KafkaService } from '../kafka/kafka.service';
 import { UserRegisteredEvent } from '../accounts/events/user-registered.event';
 import { SentEmail } from '@prisma/client';
-import { sendEmail } from '../utils/mailer';
+import { sendEmail } from '../utils/resend.utils';
 import { UserLoggedInEvent } from '../accounts/events/user-loggedin.event';
 import { env } from 'prisma/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -259,6 +259,7 @@ export class NotificationService {
       await sendEmail({
         to: email.recipient,
         subject: email.subject,
+        text: email.body,
         html: email.body,
       });
       await this.prisma.sentEmail.update({
