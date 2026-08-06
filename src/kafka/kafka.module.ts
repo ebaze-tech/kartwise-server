@@ -1,30 +1,44 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Partitioners } from 'kafkajs';
 import { KafkaService } from './kafka.service';
 
 @Module({
   imports: [
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
         name: 'KAFKA_SERVICE',
-        transport: Transport.KAFKA,
-        options: {
-          client: {
-            clientId: 'uni-mart',
-            brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.KAFKA,
+          options: {
+            client: {
+              clientId: 'kartwise',
+              brokers: [configService.getOrThrow<string>('KAFKA_BROKER')],
+              ssl: true,
+              sasl: {
+                mechanism: 'plain',
+                username: configService.getOrThrow<string>('KAFKA_API_KEY'),
+                password: configService.getOrThrow<string>('KAFKA_API_SECRET'),
+              },
+              connectionTimeout: 30000,
+              authenticationTimeout: 30000,
+              requestTimeout: 30000,
+            },
+            consumer: {
+              groupId: 'kartwise-consumer',
+            },
+            producer: {
+              createPartitioner: Partitioners.LegacyPartitioner,
+            },
           },
-          consumer: {
-            groupId: 'uni-mart-consumer',
-          },
-          producer: {
-            createPartitioner: Partitioners.LegacyPartitioner,
-          },
-        },
+        }),
       },
     ]),
   ],
   providers: [KafkaService],
-  exports: [KafkaService, ClientsModule],
+  exports: [KafkaService],
 })
 export class KafkaModule {}

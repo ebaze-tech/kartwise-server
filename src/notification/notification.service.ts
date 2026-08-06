@@ -3,11 +3,12 @@ import { PrismaService } from '../prisma/prisma.service';
 import { KafkaService } from '../kafka/kafka.service';
 import { UserRegisteredEvent } from '../accounts/events/user-registered.event';
 import { SentEmail } from '@prisma/client';
-import { sendEmail } from '../utils/mailer';
+import { sendEmail } from '../utils/resend.utils';
 import { UserLoggedInEvent } from '../accounts/events/user-loggedin.event';
-import { env } from 'prisma/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import {config} from "dotenv"
 
+config()
 @Injectable()
 export class NotificationService {
   constructor(
@@ -22,6 +23,7 @@ export class NotificationService {
           userId: event.userId,
           recipient: event.email,
           subject: 'Welcome to UniMart!',
+          from: process.env.WELCOME_NOTIFICATION_MAIL!,
           body: `
           <!DOCTYPE html>
 <html lang="en">
@@ -143,6 +145,7 @@ export class NotificationService {
           userId: event.userId,
           recipient: event.email,
           subject: 'New Login Notification',
+          from: process.env.LOGIN_NOTIFICATION_MAIL!,
           body: `
           <!DOCTYPE html>
 <html lang="en">
@@ -259,7 +262,9 @@ export class NotificationService {
       await sendEmail({
         to: email.recipient,
         subject: email.subject,
+        text: email.body,
         html: email.body,
+        from: email.from,
       });
       await this.prisma.sentEmail.update({
         where: { id: email.id },

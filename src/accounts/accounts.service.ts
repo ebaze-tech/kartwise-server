@@ -26,9 +26,8 @@ export class AccountsService {
   async createAccount(
     createAccountDto: CreateAccountDto,
   ): Promise<{ message: string; data: UserAccountDto }> {
-    const { email, username, password, role, firstName, lastName } =
-      createAccountDto;
-    if (!email || !username || !password || !role || !firstName || !lastName) {
+    const { email, password, role, firstName, lastName } = createAccountDto;
+    if (!email || !password || !role || !firstName || !lastName) {
       throw new Error('All fields are required');
     }
 
@@ -43,6 +42,8 @@ export class AccountsService {
       if (user) throw new BadRequestException('User already exists');
 
       const hashPassword = await this.hashPassword(password);
+
+      const username = `${firstName.toLowerCase()}${lastName.toLowerCase()}${Math.floor(Math.random() * 1000)}`;
       const data = await this.prisma.$transaction(async (tx) => {
         const newUser = await tx.user.create({
           data: {
@@ -104,9 +105,12 @@ export class AccountsService {
     }
   }
 
-  async loginAccount(
-    loginAccountDto: LoginAccountDto,
-  ): Promise<{ message: string; accessToken: string; refreshToken: string }> {
+  async loginAccount(loginAccountDto: LoginAccountDto): Promise<{
+    message: string;
+    accessToken: string;
+    refreshToken: string;
+    role: Role;
+  }> {
     const { email, password } = loginAccountDto;
     if (!email || !password) throw new Error('All fields are required');
 
@@ -172,7 +176,12 @@ export class AccountsService {
         });
       });
 
-      return { message: 'Login successful', accessToken, refreshToken };
+      return {
+        message: 'Login successful',
+        accessToken,
+        refreshToken,
+        role: user.role,
+      };
     } catch (error) {
       console.error(error);
 
@@ -183,6 +192,22 @@ export class AccountsService {
         'Internal Server Error. Please try again',
       );
     }
+  }
+
+  async logoutAccount(sessionId: string) {
+    await this.prisma.$transaction(async (tx) => {
+      const session = await this.prisma.session.findUnique({
+        where: { id: sessionId },
+      });
+
+      if (!session) throw new NotFoundException('User session not found');
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: session.userId },
+      });
+
+      if(!user) throw new NotFoundException("User not found")
+    });
   }
 
   private async hashPassword(password: string): Promise<string> {
