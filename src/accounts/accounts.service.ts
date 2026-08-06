@@ -107,7 +107,12 @@ export class AccountsService {
 
   async loginAccount(
     loginAccountDto: LoginAccountDto,
-  ): Promise<{ message: string; accessToken: string; refreshToken: string }> {
+  ): Promise<{
+    message: string;
+    accessToken: string;
+    refreshToken: string;
+    role: Role;
+  }> {
     const { email, password } = loginAccountDto;
     if (!email || !password) throw new Error('All fields are required');
 
@@ -173,7 +178,12 @@ export class AccountsService {
         });
       });
 
-      return { message: 'Login successful', accessToken, refreshToken };
+      return {
+        message: 'Login successful',
+        accessToken,
+        refreshToken,
+        role: user.role,
+      };
     } catch (error) {
       console.error(error);
 

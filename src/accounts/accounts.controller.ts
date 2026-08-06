@@ -12,6 +12,7 @@ import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { UserAccountDto } from './dto/user-account.dto';
 import { LoginAccountDto } from './dto/login-account.dto';
+import { Role } from '@prisma/client';
 
 @Controller('accounts')
 export class AccountsController {
@@ -27,7 +28,12 @@ export class AccountsController {
   @Post('signin')
   async loginAccount(
     @Body() loginAccountDto: LoginAccountDto,
-  ): Promise<{ message: string; accessToken: string; refreshToken: string }> {
+  ): Promise<{
+    message: string;
+    accessToken: string;
+    refreshToken: string;
+    role: Role;
+  }> {
     return await this.accountsService.loginAccount(loginAccountDto);
   }
 }
