@@ -4,14 +4,14 @@ import { config } from 'dotenv';
 config();
 
 const apiKey = process.env.RESEND_API_KEY;
-const defaultFrom = process.env.RESEND_FROM;
-
+const WELCOME_NOTIFICATION_MAIL = process.env.WELCOME_NOTIFICATION_MAIL;
+const LOGIN_NOTIFICATION_MAIL = process.env.LOGIN_NOTIFICATION_MAIL;
 if (!apiKey) {
   throw new Error('RESEND_API_KEY is missing');
 }
 
-if (!defaultFrom) {
-  throw new Error('RESEND_FROM is missing');
+if (!WELCOME_NOTIFICATION_MAIL || !LOGIN_NOTIFICATION_MAIL) {
+  throw new Error('WELCOME_NOTIFICATION_MAIL is missing');
 }
 
 const resend = new Resend(apiKey);
@@ -21,7 +21,7 @@ interface SendEmailOptions {
   subject: string;
   text: string;
   html: string;
-  from?: string;
+  from: string;
 }
 
 export const sendEmail = async ({
@@ -29,7 +29,7 @@ export const sendEmail = async ({
   subject,
   text,
   html,
-  from = defaultFrom,
+  from,
 }: SendEmailOptions) => {
   if (!text && !html) {
     throw new Error('Either text or html must be provided.');

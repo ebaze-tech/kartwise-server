@@ -27,7 +27,7 @@ enum OutboxStatus {
 
 model User {
   id                String    @id @default(uuid())
-  username          String    
+  username          String
   firstName         String
   lastName          String
   email             String    @unique
@@ -114,6 +114,7 @@ model SentEmail {
   eventType String
   recipient String
   subject   String
+  from      String
   body      String
 
   status EmailStatus @default(PENDING)
