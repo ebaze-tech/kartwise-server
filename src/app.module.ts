@@ -5,6 +5,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { KafkaModule } from './kafka/kafka.module';
 import { ScheduleModule, SchedulerRegistry } from '@nestjs/schedule';
 import { NotificationModule } from './notification/notification.module';
+import { AccountsController } from './accounts/accounts.controller';
 
 @Module({
   imports: [
@@ -16,8 +17,8 @@ import { NotificationModule } from './notification/notification.module';
     KafkaModule,
     NotificationModule,
     ScheduleModule.forRoot(),
-  ],  
-  controllers: [],
+  ],
+  controllers: [AccountsController],
   providers: [],
 })
 export class AppModule {}
