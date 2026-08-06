@@ -6,6 +6,7 @@ import { KafkaModule } from './kafka/kafka.module';
 import { ScheduleModule, SchedulerRegistry } from '@nestjs/schedule';
 import { NotificationModule } from './notification/notification.module';
 import { AccountsController } from './accounts/accounts.controller';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { AccountsController } from './accounts/accounts.controller';
     NotificationModule,
     ScheduleModule.forRoot(),
   ],
-  controllers: [AccountsController],
+  controllers: [AppController],
   providers: [],
 })
 export class AppModule {}
