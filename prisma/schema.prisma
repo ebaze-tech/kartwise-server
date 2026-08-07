@@ -9,6 +9,7 @@ datasource db {
 enum Role {
   BUSINESS_OWNER
   BUYER
+  ADMIN
 }
 
 enum EmailStatus {
@@ -32,16 +33,18 @@ model User {
   lastName          String
   email             String    @unique
   password          String
+  emailVerified     Boolean   @default(false)
   profilePictureUrl String?
   role              Role
   refreshToken      String?
   otp               String?
   otpExpiresAt      DateTime?
 
-  resetTokens PasswordResetToken[]
-  emailTokens EmailUpdateToken[]
-  sessions    Session[]
-  sentEmails  SentEmail[]
+  resetTokens             PasswordResetToken[]
+  emailTokens             EmailUpdateToken[]
+  sessions                Session[]
+  sentEmails              SentEmail[]
+  emailVerificationTokens EmailVerificationToken[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -82,15 +85,19 @@ model EmailUpdateToken {
   @@map("email_update_tokens")
 }
 
-model Otp {
+model EmailVerificationToken {
   id        String   @id @default(uuid())
-  email     String   @unique
-  hashedOtp String
+  token     String   @unique
   expiresAt DateTime
-  createdAt DateTime @default(now())
 
-  @@index([email])
-  @@map("otp")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([token, userId])
+  @@map("email_verification_tokens")
 }
 
 model Session {

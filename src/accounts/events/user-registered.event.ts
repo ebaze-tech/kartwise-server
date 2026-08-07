@@ -1,4 +1,4 @@
-import { Role } from "@prisma/client";
+import { Role } from '@prisma/client';
 
 export class UserRegisteredEvent {
   constructor(
@@ -8,6 +8,8 @@ export class UserRegisteredEvent {
     public readonly firstName: string,
     public readonly lastName: string,
     public readonly role: Role,
+    public readonly emailVerified: boolean,
+    public readonly otp: string,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
     public readonly loggedAt: Date,
