@@ -129,7 +129,12 @@ export class BusinessService {
       },
     });
 
-    if (categories.length === 0)
+    if (
+      categories.length === 0 ||
+      categories === null ||
+      categories === undefined ||
+      !categories
+    )
       throw new NotFoundException('No business categories found');
 
     return {
