@@ -30,7 +30,7 @@ export class BusinessController {
   async getBusinessesByCategoryId(@Param('categoryId') categoryId: string) {
     return await this.businessService.getBusinessesByCategoryId(categoryId);
   }
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.BUSINESS_OWNER)
   @Post('setup')
   async createBusiness(
@@ -43,7 +43,7 @@ export class BusinessController {
     );
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.BUSINESS_OWNER)
   @Get('my-businesses')
   async getMyBusinesses(@GetUser('id') ownerId: string) {
