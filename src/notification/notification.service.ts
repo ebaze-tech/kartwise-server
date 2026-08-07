@@ -88,6 +88,9 @@ export class NotificationService {
               <p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
                 We are thrilled to have you here. Get ready to discover unique campus gems and support student-owned businesses right here on your campus.
               </p>
+              <p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                Here's the OTP for activating your newly created account ${event.otp}
+              </p>
               <p style="margin: 0 0 30px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
                 From freshly baked goods to unique crafts, the best of what our campus has to offer is now just a tap away. Join hundreds of students already trading today.
               </p>
