@@ -128,9 +128,33 @@ export class BusinessService {
         businesses: true,
       },
     });
+
+    if (!categories)
+      throw new NotFoundException('No business categories found');
+
     return {
       message: 'Business categories data fetched successfully',
       data: categories,
+    };
+  }
+  async getBusinessesByCategoryId(
+    categoryId: string,
+  ): Promise<{ message: string; data: BusinessDto[] }> {
+    const category = await this.prisma.businessCategory.findUnique({
+      where: { id: categoryId },
+    });
+    if (!category) throw new NotFoundException('Category not found');
+
+    const businesses = await this.prisma.business.findMany({
+      where: { categoryId: category.id },
+      include: {
+        category: true,
+      },
+    });
+
+    return {
+      message: 'Businesses data fetched successfully',
+      data: businesses,
     };
   }
 }

@@ -26,6 +26,10 @@ export class BusinessController {
     return await this.businessService.getCategories();
   }
 
+  @Get('categories/:categoryId')
+  async getBusinessesByCategoryId(@Param('categoryId') categoryId: string) {
+    return await this.businessService.getBusinessesByCategoryId(categoryId);
+  }
   @UseGuards(JwtAuthGuard)
   @Roles(Role.BUSINESS_OWNER)
   @Post('setup')
