@@ -45,6 +45,7 @@ model User {
   sessions                Session[]
   sentEmails              SentEmail[]
   emailVerificationTokens EmailVerificationToken[]
+  businesses              Business?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -154,4 +155,37 @@ model Outbox {
 
   @@index([status])
   @@map("outbox")
+}
+
+// <----- CORE FEATURES (BUSINESS) ----->
+model Business {
+  id           String           @id @default(uuid())
+  name         String
+  description  String
+  ownerId      String           @unique
+  owner        User             @relation(fields: [ownerId], references: [id])
+  emailAddress String           @unique
+  phoneNumber  String
+  address      String
+  categoryId   String
+  category     BusinessCategory @relation(fields: [categoryId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId, categoryId])
+  @@index([name, address])
+  @@map("business")
+}
+
+model BusinessCategory {
+  id          String     @id @default(uuid())
+  name        String
+  description String
+  businesses  Business[]
+}
+
+model Product {
+  id   String @id @default(uuid())
+  name String
 }
