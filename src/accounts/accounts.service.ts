@@ -34,7 +34,7 @@ export class AccountsService {
   ): Promise<{ message: string; data: UserAccountDto }> {
     const { email, password, role, firstName, lastName } = createAccountDto;
     if (!email || !password || !role || !firstName || !lastName) {
-      throw new BadRequestException('All fields are required');
+      throw new Error('All fields are required');
     }
 
     try {
@@ -129,7 +129,7 @@ export class AccountsService {
     role: Role;
   }> {
     const { email, password } = loginAccountDto;
-    if (!email || !password) throw new BadRequestException('All fields are required');
+    if (!email || !password) throw new Error('All fields are required');
 
     try {
       const user = await this.prisma.user.findUnique({ where: { email } });
@@ -257,7 +257,7 @@ export class AccountsService {
   ): Promise<{ message: string }> {
     const { currentEmail, newEmail } = updateEmailDto;
 
-    if (!currentEmail || !newEmail) throw new BadRequestException('All fields are required');
+    if (!currentEmail || !newEmail) throw new Error('All fields are required');
 
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
@@ -559,7 +559,7 @@ export class AccountsService {
     const { currentPassword, newPassword } = changePasswordDto;
 
     if (!currentPassword || !newPassword)
-      throw new BadRequestException('Current and new passwords are required');
+      throw new Error('Current and new passwords are required');
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
@@ -602,7 +602,7 @@ export class AccountsService {
     verifyEmailDto: VerifyEmailDto,
   ): Promise<{ message: string }> {
     const { otp } = verifyEmailDto;
-    if (!otp) throw new BadRequestException('OTP are required');
+    if (!otp) throw new Error('OTP is required');
 
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestException('Invalid request');
@@ -688,7 +688,7 @@ export class AccountsService {
   private async hashPassword(password: string): Promise<string> {
     const hashPwd = await bcrypt.hash(password, this.saltRounds);
 
-    if (!hashPwd) throw new BadRequestException('Data processing error. Please try again');
+    if (!hashPwd) throw new Error('Data processing error. Please try again');
     return hashPwd;
   }
 

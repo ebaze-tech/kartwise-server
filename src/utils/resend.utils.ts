@@ -7,11 +7,11 @@ const apiKey = process.env.RESEND_API_KEY;
 const WELCOME_NOTIFICATION_MAIL = process.env.WELCOME_NOTIFICATION_MAIL;
 const LOGIN_NOTIFICATION_MAIL = process.env.LOGIN_NOTIFICATION_MAIL;
 if (!apiKey) {
-  throw new BadRequestException('RESEND_API_KEY is missing');
+  throw new Error('RESEND_API_KEY is missing');
 }
 
 if (!WELCOME_NOTIFICATION_MAIL || !LOGIN_NOTIFICATION_MAIL) {
-  throw new BadRequestException('WELCOME_NOTIFICATION_MAIL is missing');
+  throw new Error('WELCOME_NOTIFICATION_MAIL is missing');
 }
 
 const resend = new Resend(apiKey);
@@ -32,7 +32,7 @@ export const sendEmail = async ({
   from,
 }: SendEmailOptions) => {
   if (!text && !html) {
-    throw new BadRequestException('Either text or html must be provided.');
+    throw new Error('Either text or html must be provided.');
   }
 
   try {
