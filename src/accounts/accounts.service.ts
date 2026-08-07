@@ -718,7 +718,7 @@ export class AccountsService {
 
     return {
       message:
-        'otp has been resent. Please check your email for the verification code',
+        'Otp has been resent. Please check your email for the verification code',
     };
   }
   // delete account method
