@@ -9,6 +9,7 @@ import { PasswordResetRequestedEvent } from '../accounts/events/password-reset-r
 import { ResetPasswordConfirmationEvent } from '../accounts/events/reset-password-confirmation.event';
 import { EmailVerifiedEvent } from '../accounts/events/email-verified.event';
 import { AccountDeletedEvent } from '../accounts/events/account-deleted.event';
+import { ResendOtpEvent } from '../accounts/events/resend-otp.event';
 
 @Controller()
 export class NotificationConsumer {
@@ -67,6 +68,13 @@ export class NotificationConsumer {
     console.log('Received user.emailVerified event:', event);
     return await this.notificationService.sendEmailVerifiedNotification(event);
   }
+
+  @EventPattern('user.verificationEmailResent')
+  async handleVerificationEmailResentEvent(@Payload() event: ResendOtpEvent) {
+    // Type this with a proper Event class if you wish
+    return await this.notificationService.sendResendVerificationEmail(event);
+  }
+
   @EventPattern('user.accountDeleted')
   async handleAccountDeletedEvent(@Payload() event: AccountDeletedEvent) {
     console.log('Received user.accountDeleted event:', event);

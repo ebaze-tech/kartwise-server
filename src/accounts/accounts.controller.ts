@@ -21,6 +21,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ResendVerificationDto } from './dto/resend-otp.dto';
 
 @Controller('accounts')
 export class AccountsController {
@@ -115,6 +116,14 @@ export class AccountsController {
     return await this.accountsService.verifyEmail(verifyEmailDto);
   }
 
+  @Post('resend-verification')
+  async resendVerificationEmail(
+    @Body() resendVerificationDto: ResendVerificationDto,
+  ): Promise<{ message: string }> {
+    return await this.accountsService.resendVerificationEmail(
+      resendVerificationDto,
+    );
+  }
   @UseGuards(JwtAuthGuard)
   @Delete('me')
   async deleteAccount(

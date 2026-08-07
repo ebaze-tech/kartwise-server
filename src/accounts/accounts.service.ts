@@ -19,6 +19,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ResendVerificationDto } from './dto/resend-otp.dto';
 
 @Injectable()
 export class AccountsService {
@@ -666,6 +667,62 @@ export class AccountsService {
     return { message: 'Email verified successfully' };
   }
 
+  // resend otp method
+
+  // resend verification email method
+  async resendVerificationEmail(
+    resendVerificationDto: ResendVerificationDto,
+  ): Promise<{ message: string }> {
+    const { email } = resendVerificationDto;
+
+    if (!email) throw new BadRequestException('Email is required');
+
+    const user = await this.prisma.user.findUnique({ where: { email } });
+
+    if (!user || user.emailVerified) {
+      return {
+        message:
+          'If the email is registered and unverified, a new code has been sent.',
+      };
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedOtp = await bcrypt.hash(otp, this.saltRounds);
+
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.emailVerificationToken.deleteMany({
+        where: { userId: user.id },
+      });
+
+      await tx.emailVerificationToken.create({
+        data: {
+          userId: user.id,
+          token: hashedOtp,
+          expiresAt,
+        },
+      });
+
+      await tx.outbox.create({
+        data: {
+          topic: 'user.verificationEmailResent',
+          payload: {
+            userId: user.id,
+            email: user.email,
+            username: user.username,
+            otp: otp,
+            requestedAt: new Date(),
+          },
+        },
+      });
+    });
+
+    return {
+      message:
+        'If the email is registered and unverified, a new code has been sent.',
+    };
+  }
   // delete account method
   async deleteAccount(userId: string): Promise<{ message: string }> {
     await this.prisma.$transaction(async (tx) => {
