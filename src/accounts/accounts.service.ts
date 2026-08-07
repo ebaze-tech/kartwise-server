@@ -279,7 +279,7 @@ export class AccountsService {
     await this.prisma.$transaction(async (tx) => {
       await tx.emailUpdateToken.deleteMany({ where: { userId } });
 
-      await this.prisma.emailUpdateToken.create({
+      await tx.emailUpdateToken.create({
         data: {
           userId,
           token: hashedOtp,
@@ -539,6 +539,11 @@ export class AccountsService {
         },
         { secret: process.env.JWT_REFRESH_SECRET, expiresIn: '7d' },
       );
+
+      await this.prisma.session.update({
+        where: { id: payload.sessionId },
+        data: { refreshToken: newRefreshToken },
+      });
 
       return { accessToken: newAccessToken, refreshToken: newRefreshToken };
     } catch (error) {
