@@ -85,6 +85,13 @@ export class AccountsService {
           throw new InternalServerErrorException(
             'Failed to create account. Please try again',
           );
+        await tx.emailVerificationToken.create({
+          data: {
+            userId: newUser.id,
+            token: hashedOtp,
+            expiresAt,
+          },
+        });
 
         await tx.outbox.create({
           data: {
