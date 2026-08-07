@@ -129,7 +129,7 @@ export class BusinessService {
       },
     });
 
-    if (!categories)
+    if (categories.length === 0)
       throw new NotFoundException('No business categories found');
 
     return {
