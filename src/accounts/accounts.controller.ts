@@ -112,7 +112,7 @@ export class AccountsController {
   async verifyEmail(
     @Body() verifyEmailDto: VerifyEmailDto,
   ): Promise<{ message: string }> {
-    return await this.accountsService.verifyEmail( verifyEmailDto);
+    return await this.accountsService.verifyEmail(verifyEmailDto);
   }
 
   @UseGuards(JwtAuthGuard)

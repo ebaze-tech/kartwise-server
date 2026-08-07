@@ -605,13 +605,14 @@ export class AccountsService {
 
   // verify email method
   async verifyEmail(
-    userId: string,
     verifyEmailDto: VerifyEmailDto,
   ): Promise<{ message: string }> {
     const { otp } = verifyEmailDto;
     if (!otp) throw new Error('OTP is required');
 
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: verifyEmailDto.userId },
+    });
     if (!user) throw new BadRequestException('Invalid request');
 
     if (user.emailVerified)
