@@ -7,4 +7,9 @@ export class VerifyEmailDto {
   @IsNotEmpty({ message: 'OTP is required' })
   @Type(() => String)
   otp!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'OTP is required' })
+  @Type(() => String)
+  userId!: string;
 }

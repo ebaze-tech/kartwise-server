@@ -111,9 +111,8 @@ export class AccountsController {
   @Post('verify-email')
   async verifyEmail(
     @Body() verifyEmailDto: VerifyEmailDto,
-    @GetUser('id') userId: string,
   ): Promise<{ message: string }> {
-    return await this.accountsService.verifyEmail(userId, verifyEmailDto);
+    return await this.accountsService.verifyEmail( verifyEmailDto);
   }
 
   @UseGuards(JwtAuthGuard)
