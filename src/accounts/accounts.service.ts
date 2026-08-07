@@ -602,7 +602,7 @@ export class AccountsService {
     verifyEmailDto: VerifyEmailDto,
   ): Promise<{ message: string }> {
     const { otp } = verifyEmailDto;
-    if (!otp) throw new Error('OTP are required');
+    if (!otp) throw new Error('OTP is required');
 
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestException('Invalid request');
