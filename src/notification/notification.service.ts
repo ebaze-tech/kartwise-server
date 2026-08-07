@@ -13,6 +13,7 @@ import { PasswordResetRequestedEvent } from '../accounts/events/password-reset-r
 import { ResetPasswordConfirmationEvent } from '../accounts/events/reset-password-confirmation.event';
 import { EmailVerifiedEvent } from '../accounts/events/email-verified.event';
 import { AccountDeletedEvent } from '../accounts/events/account-deleted.event';
+import { ResendOtpEvent } from '../accounts/events/resend-otp.event';
 
 config();
 @Injectable()
@@ -144,8 +145,6 @@ export class NotificationService {
       const sendEmail = await this.trySend(email);
 
       console.log(sendEmail);
-
-      await this.trySend(email);
     } catch (error) {
       console.error('Error sending welcome email:', error);
     }
@@ -1012,6 +1011,125 @@ export class NotificationService {
       console.log(sendEmail);
     } catch (error) {
       console.error('Error sending account deletion notification:', error);
+    }
+  }
+
+  async sendResendVerificationEmail(event: ResendOtpEvent): Promise<void> {
+    try {
+      const email = await this.prisma.sentEmail.create({
+        data: {
+          userId: event.userId,
+          recipient: event.email,
+          subject: 'Your New Verification Code',
+          from: process.env.VERIFICATION_NOTIFICATION_MAIL!,
+          body: `
+          <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Verification Code - KartWise</title>
+  <!--[if mso]>
+  <style>
+    table {border-collapse: collapse; border-spacing: 0; margin: 0;}
+    div, td {padding: 0;}
+    div {margin: 0 !important;}
+  </style>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+</head>
+<body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  
+  <!-- Outer Background Table -->
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f3f4f6; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        
+        <!-- Inner Content Container -->
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+          
+          <!-- Header / Logo -->
+          <tr>
+            <td align="center" style="padding: 40px 0 20px 0; background-color: #ffffff;">
+              <h1 style="margin: 0; color: #10b981; font-size: 32px; font-weight: 800; letter-spacing: -1px;">
+                KartWise
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Main Copy -->
+          <tr>
+            <td style="padding: 20px 40px 40px 40px; text-align: left;">
+              <h2 style="margin: 0 0 20px 0; color: #111827; font-size: 24px; font-weight: bold; text-align: center;">
+                Your New Verification Code
+              </h2>
+              <p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                Hi ${event.username || 'there'},
+              </p>
+              <p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                You recently requested a new verification code for your KartWise account. Please use the code below to complete your registration.
+              </p>
+
+              <!-- OTP Display Box -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px 40px; display: inline-block;">
+                      <span style="font-family: monospace; font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #10b981;">
+                        ${event.otp}
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 0 0 10px 0; color: #4b5563; font-size: 16px; line-height: 1.6; text-align: center;">
+                This code will expire in 24 hours.
+              </p>
+              
+              <p style="margin: 30px 0 0 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
+                If you did not request this code, you can safely ignore this email.
+              </p>
+              
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f9fafb; padding: 30px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0 0 10px 0; color: #9ca3af; font-size: 14px;">
+                © ${new Date().getFullYear()} KartWise. All rights reserved.
+              </p>
+              <p style="margin: 0; color: #9ca3af; font-size: 12px; line-height: 1.5;">
+                This is an automated message requested by a user on our platform.<br>
+                Please do not reply directly to this email.
+              </p>
+            </td>
+          </tr>
+          
+        </table>
+        
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+          status: 'PENDING',
+          attempts: 0,
+          eventType: 'user.verificationEmailResent',
+        },
+      });
+
+      // Send the email exactly once
+      await this.trySend(email);
+    } catch (error) {
+      console.error('Error sending resend verification email:', error);
     }
   }
 
