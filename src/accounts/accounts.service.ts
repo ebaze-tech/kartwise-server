@@ -601,8 +601,8 @@ export class AccountsService {
     userId: string,
     verifyEmailDto: VerifyEmailDto,
   ): Promise<{ message: string }> {
-    const { email, otp } = verifyEmailDto;
-    if (!email || !otp) throw new Error('Email and OTP are required');
+    const { otp } = verifyEmailDto;
+    if (!otp) throw new Error('Email and OTP are required');
 
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestException('Invalid request');
