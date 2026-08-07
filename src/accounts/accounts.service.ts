@@ -679,12 +679,10 @@ export class AccountsService {
 
     const user = await this.prisma.user.findUnique({ where: { email } });
 
-    if (!user || user.emailVerified) {
-      return {
-        message:
-          'If the email is registered and unverified, a new code has been sent.',
-      };
-    }
+    if (!user) throw new NotFoundException('User not found');
+
+    if (user.emailVerified)
+      throw new BadRequestException('Email is already verified');
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const hashedOtp = await bcrypt.hash(otp, this.saltRounds);
@@ -720,7 +718,7 @@ export class AccountsService {
 
     return {
       message:
-        'If the email is registered and unverified, a new code has been sent.',
+        'otp has been resent. Please check your email for the verification code',
     };
   }
   // delete account method
