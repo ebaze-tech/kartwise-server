@@ -13,7 +13,7 @@ export class ChangePasswordDto {
   @Type(() => String)
   @Matches(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/, {
     message:
-      'New password must be at least 8 characters long and contain at least one letter and one number',
+      'New password must be at least 8 characters long and contain at least one letter, one number, and one special character',
   })
   newPassword!: string;
 }
