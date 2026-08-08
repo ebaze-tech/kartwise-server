@@ -180,9 +180,8 @@ export class BusinessService {
     }
 
     const updatedBusiness = await this.prisma.$transaction(async (tx) => {
-      const isBusinessOwner = await this.prisma.business.findFirst({
+      const isBusinessOwner = await tx.business.findFirst({
         where: { AND: [{ id: businessId }, { ownerId }] },
-        include: { owner: true },
       });
 
       if (!isBusinessOwner) throw new NotFoundException('Business not found');
@@ -234,9 +233,8 @@ export class BusinessService {
       );
 
     await this.prisma.$transaction(async (tx) => {
-      const isBusinessOwner = await this.prisma.business.findFirst({
+      const isBusinessOwner = await tx.business.findFirst({
         where: { AND: [{ id: businessId }, { ownerId }] },
-        include: { owner: true },
       });
 
       if (!isBusinessOwner) throw new NotFoundException('Business not found');
