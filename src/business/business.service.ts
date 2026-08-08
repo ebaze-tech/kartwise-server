@@ -252,6 +252,16 @@ export class BusinessService {
     const { name, description, price, isAvailable, stockCount, businessName } =
       createBusinessProductDto;
 
+    if (files.images === undefined || files.images === null) {
+      throw new BadRequestException('No images uploaded for the product');
+    }
+
+    if (files.images.length === 0 || files.images.length > 5) {
+      throw new BadRequestException(
+        'You must upload between 1 and 5 images for the product',
+      );
+    }
+
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
@@ -424,7 +434,7 @@ export class BusinessService {
     }
 
     await this.prisma.product.delete({
-      where: { id: productId },
+      where: { id: productId, business: { ownerId: userId } },
     });
 
     return { message: 'Product deleted successfully' };
