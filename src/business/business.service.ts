@@ -516,7 +516,8 @@ export class BusinessService {
       },
       orderBy: {
         name: 'asc',
-        businesses: { _count: 'desc' },
+        products: { _count: 'desc' },
+        category: { name: 'asc' },
       },
     });
 
