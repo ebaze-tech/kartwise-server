@@ -45,7 +45,7 @@ model User {
   sessions                Session[]
   sentEmails              SentEmail[]
   emailVerificationTokens EmailVerificationToken[]
-  businesses              Business?
+  businesses              Business[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
