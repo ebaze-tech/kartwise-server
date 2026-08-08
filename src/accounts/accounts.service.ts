@@ -36,10 +36,12 @@ export class AccountsService {
     const { email, password, role, firstName, lastName } = createAccountDto;
 
     try {
-      if (role !== Role.BUSINESS_OWNER && role !== Role.BUYER)
-        throw new BadRequestException(
-          "Invalid role. Role must be either 'BUSINESS_OWNER' or 'BUYER'",
-        );
+      if (
+        role === Role.ADMIN ||
+        (role !== Role.BUSINESS_OWNER && role !== Role.BUYER)
+      ) {
+        throw new BadRequestException('Invalid role');
+      }
 
       // check existing user
       const user = await this.prisma.user.findUnique({ where: { email } });
@@ -124,6 +126,22 @@ export class AccountsService {
         'Internal Server Error. Please try again',
       );
     }
+  }
+
+  async createAdminAccount(
+    createAccountDto: CreateAccountDto,
+  ): Promise<{ message: string; data: UserAccountDto }> {
+    const { email, password, firstName, lastName } = createAccountDto;
+
+    const role = Role.ADMIN;
+
+    return await this.createAccount({
+      email,
+      password,
+      role,
+      firstName,
+      lastName,
+    });
   }
 
   // login account methodq

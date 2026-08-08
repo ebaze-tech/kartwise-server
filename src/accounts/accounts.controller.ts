@@ -34,6 +34,13 @@ export class AccountsController {
     return await this.accountsService.createAccount(createAccountDto);
   }
 
+  @Post('signup/admin')
+  async createAdminAccount(
+    @Body() createAccountDto: CreateAccountDto,
+  ): Promise<{ message: string; data: UserAccountDto }> {
+    return await this.accountsService.createAdminAccount(createAccountDto);
+  }
+
   @Post('signin')
   async loginAccount(@Body() loginAccountDto: LoginAccountDto): Promise<{
     message: string;
