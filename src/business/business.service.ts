@@ -41,16 +41,6 @@ export class BusinessService {
       phoneNumber,
     } = createBusinessDto;
 
-    if (
-      !name ||
-      !description ||
-      !address ||
-      !emailAddress ||
-      !businessCategoryId ||
-      !phoneNumber
-    )
-      throw new BadRequestException('All fields are required');
-
     const user = await this.prisma.user.findUnique({ where: { id: ownerId } });
     if (!user) throw new NotFoundException('User not found');
 
@@ -238,6 +228,7 @@ export class BusinessService {
 
     const business = await this.prisma.business.findUnique({
       where: { id: businessId },
+      include: { owner: true },
     });
 
     if (!business) throw new NotFoundException('Business not found');
@@ -260,20 +251,6 @@ export class BusinessService {
   ): Promise<{ message: string; data: BusinessProductDataDto }> {
     const { name, description, price, isAvailable, stockCount, businessName } =
       createBusinessProductDto;
-
-    if (
-      !name ||
-      !description ||
-      !price ||
-      !isAvailable ||
-      isAvailable === undefined ||
-      stockCount === undefined ||
-      !businessName ||
-      !files.images ||
-      files.images.length === 0
-    ) {
-      throw new BadRequestException('All fields are required');
-    }
 
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
@@ -313,13 +290,14 @@ export class BusinessService {
 
       try {
         uploadedImages = await Promise.all(
-          files.images!.map(async (file) =>
-            this.cloudinary.uploadBusinessProductImages(
-              file,
-              user.id,
-              business.id,
-              product.id,
-            ),
+          files.images.map(
+            async (file) =>
+              await this.cloudinary.uploadBusinessProductImages(
+                file,
+                user.id,
+                business.id,
+                product.id,
+              ),
           ),
         );
       } catch (error) {
@@ -438,6 +416,12 @@ export class BusinessService {
       where: { AND: [{ id: productId }, { business: { ownerId: userId } }] },
     });
     if (!product) throw new NotFoundException('Product not found');
+
+    if (user.role !== Role.BUSINESS_OWNER) {
+      throw new ForbiddenException(
+        'Only business owners can delete their products',
+      );
+    }
 
     await this.prisma.product.delete({
       where: { id: productId },
