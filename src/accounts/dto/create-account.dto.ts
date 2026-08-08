@@ -12,7 +12,6 @@ import {
 
 export class CreateAccountDto {
   @IsNotEmpty({ message: 'Email is required' })
-  @IsString()
   @IsEmail()
   @Matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, {
     message: 'Email must be a valid email address',

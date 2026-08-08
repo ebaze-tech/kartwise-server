@@ -14,6 +14,7 @@ export class CreateBusinessDto {
   @IsNotEmpty({ message: 'Business name is required' })
   @MinLength(3)
   @MaxLength(100)
+  @Type(() => String)
   name!: string;
 
   @IsString()
