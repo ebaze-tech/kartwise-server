@@ -37,8 +37,9 @@ export class AccountsService {
 
     try {
       if (
-        role === Role.ADMIN ||
-        (role !== Role.BUSINESS_OWNER && role !== Role.BUYER)
+        role !== Role.ADMIN &&
+        role !== Role.BUSINESS_OWNER &&
+        role !== Role.BUYER
       ) {
         throw new BadRequestException('Invalid role');
       }
