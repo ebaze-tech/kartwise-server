@@ -6,6 +6,7 @@ import {
   IsUUID,
   MinLength,
   MaxLength,
+  IsOptional,
 } from 'class-validator';
 
 export class CreateBusinessDto {

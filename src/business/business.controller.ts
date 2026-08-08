@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   UseGuards,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import { BusinessService } from './business.service';
 import { JwtAuthGuard } from '../accounts/guards/jwt-auth.guard';
@@ -16,37 +18,172 @@ import { GetUser } from '../accounts/decorators/get-user.decorator';
 import { Roles } from '../accounts/decorators/roles.decorator';
 import { create } from 'domain';
 import { CreateBusinessDto } from './dto/create-business.dto';
+import { CreateBusinessProductDto } from './dto/create-business-product.dto';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { fileFilter } from '../utils/filter';
+import {
+  BusinessDto,
+  BusinessProductDataDto,
+} from './dto/business-product-data.dto';
+import { BusinessCategoriesDto } from './dto/business-category.dto';
+import { UpdateBusinessDto } from './dto/update-business.dto';
 
 @Controller('business')
 export class BusinessController {
   constructor(private readonly businessService: BusinessService) {}
 
-  @Get('categories')
-  async getCategories() {
-    return await this.businessService.getCategories();
-  }
-
-  @Get('categories/:categoryId')
-  async getBusinessesByCategoryId(@Param('categoryId') categoryId: string) {
-    return await this.businessService.getBusinessesByCategoryId(categoryId);
-  }
+  // POST `/business/setup`
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.BUSINESS_OWNER)
   @Post('setup')
+  @UseInterceptors(
+    FileFieldsInterceptor([{ name: 'bannerImage', maxCount: 1 }], {
+      storage: memoryStorage(),
+      fileFilter: fileFilter,
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
+  )
   async createBusiness(
     @GetUser('id') ownerId: string,
     @Body() createBusinessDto: CreateBusinessDto,
-  ) {
+    @UploadedFiles() files: { bannerImage?: Express.Multer.File },
+  ): Promise<{ message: string; data: BusinessDto }> {
     return await this.businessService.createBusiness(
       ownerId,
       createBusinessDto,
+      files.bannerImage,
     );
   }
 
+  // PATCH `/business/edit/:businessId`
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.BUSINESS_OWNER)
-  @Get('my-businesses')
-  async getMyBusinesses(@GetUser('id') ownerId: string) {
+  @Patch('edit/:businessId')
+  async editBusiness(
+    @GetUser('id') ownerId: string,
+    @Param('businessId') businessId: string,
+    @Body() updateBusinessDto: UpdateBusinessDto,
+  ): Promise<{ message: string; data: BusinessDto }> {
+    return await this.businessService.editBusiness(
+      ownerId,
+      businessId,
+      updateBusinessDto,
+    );
+  }
+
+  // DELETE `/business/:businessId`
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BUSINESS_OWNER)
+  @Delete(':businessId')
+  async deleteBusiness(
+    @GetUser('id') ownerId: string,
+    @Param('businessId') businessId: string,
+  ): Promise<{ message: string }> {
+    return await this.businessService.deleteBusiness(ownerId, businessId);
+  }
+
+  // POST `/business/product`
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BUSINESS_OWNER)
+  @Post('product')
+  @UseInterceptors(
+    FileFieldsInterceptor([{ name: 'images', maxCount: 5 }], {
+      storage: memoryStorage(),
+      fileFilter: fileFilter,
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
+  )
+  async createBusinessProduct(
+    @GetUser('id') userId: string,
+    @Body() createBusinessProductDto: CreateBusinessProductDto,
+    @UploadedFiles() files: { images: Express.Multer.File[] },
+  ): Promise<{ message: string; data: BusinessProductDataDto }> {
+    return await this.businessService.createBusinessProduct(
+      createBusinessProductDto,
+      files,
+      userId,
+    );
+  }
+
+  // GET `/business/products`
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BUSINESS_OWNER)
+  @Get('products')
+  async getBusinessProducts(
+    @GetUser('id') userId: string,
+  ): Promise<{ message: string; data: BusinessProductDataDto[] }> {
+    return await this.businessService.getBusinessProducts(userId);
+  }
+
+  // GET `/business/products/:productId`
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BUSINESS_OWNER)
+  @Get('products/:productId')
+  async getBusinessProductById(
+    @GetUser('id') userId: string,
+    @Param('productId') productId: string,
+  ): Promise<{ message: string; data: BusinessProductDataDto }> {
+    return await this.businessService.getBusinessProductById(userId, productId);
+  }
+
+  // PATCH `/business/product/:productId/status`
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BUSINESS_OWNER)
+  @Patch('product/:productId/status')
+  async editBusinessProductStatus(
+    @GetUser('id') userId: string,
+    @Param('productId') productId: string,
+    @Body('status') status: boolean,
+  ): Promise<{ message: string }> {
+    return await this.businessService.editBusinessProductStatus(
+      status,
+      userId,
+      productId,
+    );
+  }
+
+  // DELETE `/business/product/:productId`
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BUSINESS_OWNER)
+  @Delete('product/:productId')
+  async deleteBusinessProduct(
+    @GetUser('id') userId: string,
+    @Param('productId') productId: string,
+  ): Promise<{ message: string }> {
+    return await this.businessService.deleteBusinessProduct(userId, productId);
+  }
+
+  // GET `/business/categories`
+  @UseGuards(JwtAuthGuard)
+  @Get('categories')
+  async getBusinessCategories(): Promise<{
+    message: string;
+    data: BusinessCategoriesDto[];
+  }> {
+    return await this.businessService.getBusinessCategories();
+  }
+
+  // GET `/business/categories/:categoryId`
+  @UseGuards(JwtAuthGuard)
+  @Get('categories/:categoryId')
+  async getBusinessCategoryById(
+    @Param('categoryId') categoryId: string,
+  ): Promise<{ message: string; data: BusinessDto[] }> {
+    return await this.businessService.getBusinessCategoryById(categoryId);
+  }
+
+  // GET `/business/me`
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BUSINESS_OWNER)
+  @Get('me')
+  async getMyBusinesses(
+    @GetUser('id') ownerId: string,
+  ): Promise<{ message: string; data: BusinessDto[] }> {
     return await this.businessService.getMyBusinesses(ownerId);
   }
 }
