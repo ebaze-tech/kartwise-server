@@ -162,16 +162,19 @@ model Business {
   id           String           @id @default(uuid())
   name         String
   description  String
-  ownerId      String           @unique
-  owner        User             @relation(fields: [ownerId], references: [id])
   emailAddress String           @unique
   phoneNumber  String
   address      String
+  bannerImageUrl String?
   categoryId   String
   category     BusinessCategory @relation(fields: [categoryId], references: [id])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  ownerId String @unique
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
 
   @@index([ownerId, categoryId])
   @@index([name, address])
@@ -183,9 +186,44 @@ model BusinessCategory {
   name        String
   description String
   businesses  Business[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@map("business_category")
 }
 
 model Product {
-  id   String @id @default(uuid())
-  name String
+  id          String          @id @default(uuid())
+  name        String
+  description String
+  price       Decimal         @db.Decimal(10, 2)
+  isAvailable Boolean
+  images      ProductImages[]
+  stockCount  Int             @default(0)
+  businessId  String
+  business    Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([name])
+  @@map("product")
+}
+
+model ProductImages {
+  id       String @id @default(uuid())
+  url      String
+  publicId String
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@map("product_image")
 }
