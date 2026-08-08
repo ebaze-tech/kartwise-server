@@ -131,6 +131,22 @@ export class BusinessController {
     return await this.businessService.getBusinessProductById(userId, productId);
   }
 
+  // PATCH `/business/product/:productId/status`
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BUSINESS_OWNER)
+  @Patch('product/:productId/status')
+  async editBusinessProductStatus(
+    @GetUser('id') userId: string,
+    @Param('productId') productId: string,
+    @Body('status') status: boolean,
+  ): Promise<{ message: string }> {
+    return await this.businessService.editBusinessProductStatus(
+      status,
+      userId,
+      productId,
+    );
+  }
+
   // DELETE `/business/product/:productId`
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.BUSINESS_OWNER)

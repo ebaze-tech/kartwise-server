@@ -159,15 +159,17 @@ model Outbox {
 
 // <----- CORE FEATURES (BUSINESS) ----->
 model Business {
-  id           String           @id @default(uuid())
-  name         String
-  description  String
-  emailAddress String           @unique
-  phoneNumber  String
-  address      String
+  id             String  @id @default(uuid())
+  name           String
+  description    String
+  emailAddress   String  @unique
+  phoneNumber    String
+  address        String
   bannerImageUrl String?
-  categoryId   String
-  category     BusinessCategory @relation(fields: [categoryId], references: [id])
+  isActive       Boolean @default(true)
+
+  categoryId String
+  category   BusinessCategory @relation(fields: [categoryId], references: [id])
 
   ownerId String @unique
   owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)

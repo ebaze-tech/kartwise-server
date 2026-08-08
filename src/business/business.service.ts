@@ -350,6 +350,33 @@ export class BusinessService {
     };
   }
 
+  // edit business product status method
+  async editBusinessProductStatus(
+    status: boolean,
+    userId: string,
+    productId: string,
+  ): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    if (user.role !== Role.BUSINESS_OWNER)
+      throw new ForbiddenException(
+        'Only business owners can edit their products',
+      );
+
+    const product = await this.prisma.product.findFirst({
+      where: { AND: [{ id: productId }, { business: { ownerId: userId } }] },
+    });
+    if (!product) throw new NotFoundException('Product not found');
+
+    await this.prisma.product.update({
+      where: { id: productId },
+      data: { isAvailable: status },
+    });
+
+    return { message: 'Product status updated successfully' };
+  }
+
   // get business products method
   async getBusinessProducts(
     userId: string,
