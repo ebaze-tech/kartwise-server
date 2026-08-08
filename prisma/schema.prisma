@@ -157,7 +157,7 @@ model Outbox {
   @@map("outbox")
 }
 
-// <----- CORE FEATURES (BUSINESS) ----->
+
 model Business {
   id             String  @id @default(uuid())
   name           String
@@ -212,6 +212,7 @@ model Product {
 
   @@index([businessId])
   @@index([name])
+  @@index([isAvailable])
   @@map("product")
 }
 
