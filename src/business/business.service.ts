@@ -433,8 +433,14 @@ export class BusinessService {
       );
     }
 
+    const isProductOwner = await this.prisma.product.findFirst({
+      where: { AND: [{ id: productId }, { business: { ownerId: userId } }] },
+    });
+    if (!isProductOwner)
+      throw new ForbiddenException('You are not the owner of this product');
+
     await this.prisma.product.delete({
-      where: { id: productId, business: { ownerId: userId } },
+      where: { id: productId },
     });
 
     return { message: 'Product deleted successfully' };
