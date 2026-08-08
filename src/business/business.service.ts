@@ -166,9 +166,6 @@ export class BusinessService {
 
     if (!business) throw new NotFoundException('Business not found');
 
-    if (business.ownerId !== ownerId)
-      throw new ForbiddenException('You are not the owner of this business');
-
     if (
       updateBusinessDto.emailAddress &&
       updateBusinessDto.emailAddress !== business.emailAddress
@@ -183,6 +180,16 @@ export class BusinessService {
     }
 
     const updatedBusiness = await this.prisma.$transaction(async (tx) => {
+      const isBusinessOwner = await this.prisma.business.findFirst({
+        where: { AND: [{ id: businessId }, { ownerId }] },
+        include: { owner: true },
+      });
+
+      if (!isBusinessOwner) throw new NotFoundException('Business not found');
+
+      if (isBusinessOwner.ownerId !== ownerId)
+        throw new ForbiddenException('You are not the owner of this business');
+
       const updatedData = await tx.business.update({
         where: { id: business.id },
         data: updateBusinessDto,
@@ -226,18 +233,20 @@ export class BusinessService {
         'Only business owners can delete their businesses',
       );
 
-    const business = await this.prisma.business.findUnique({
-      where: { id: businessId },
-      include: { owner: true },
-    });
+    await this.prisma.$transaction(async (tx) => {
+      const isBusinessOwner = await this.prisma.business.findFirst({
+        where: { AND: [{ id: businessId }, { ownerId }] },
+        include: { owner: true },
+      });
 
-    if (!business) throw new NotFoundException('Business not found');
+      if (!isBusinessOwner) throw new NotFoundException('Business not found');
 
-    if (business.ownerId !== ownerId)
-      throw new ForbiddenException('You are not the owner of this business');
+      if (isBusinessOwner.ownerId !== ownerId)
+        throw new ForbiddenException('You are not the owner of this business');
 
-    await this.prisma.business.delete({
-      where: { id: businessId, ownerId: ownerId },
+      await tx.business.delete({
+        where: { id: businessId },
+      });
     });
 
     return { message: 'Business deleted successfully' };
@@ -352,14 +361,20 @@ export class BusinessService {
         'Only business owners can edit their products',
       );
 
-    const product = await this.prisma.product.findFirst({
-      where: { AND: [{ id: productId }, { business: { ownerId: userId } }] },
-    });
-    if (!product) throw new NotFoundException('Product not found');
+    await this.prisma.$transaction(async (tx) => {
+      const product = await tx.product.findFirst({
+        where: {
+          AND: [{ id: productId }, { business: { ownerId: userId } }],
+        },
+        include: { business: true },
+      });
 
-    await this.prisma.product.update({
-      where: { id: productId },
-      data: { isAvailable: status },
+      if (!product) throw new NotFoundException('Product not found');
+
+      await tx.product.update({
+        where: { id: productId },
+        data: { isAvailable: status },
+      });
     });
 
     return { message: 'Product status updated successfully' };
@@ -434,13 +449,13 @@ export class BusinessService {
     }
 
     await this.prisma.$transaction(async (tx) => {
-      const isProductOwner = await this.prisma.product.findFirst({
+      const isProductOwner = await tx.product.findFirst({
         where: { AND: [{ id: productId }, { business: { ownerId: userId } }] },
       });
       if (!isProductOwner)
         throw new ForbiddenException('You are not the owner of this product');
 
-      await this.prisma.product.delete({
+      await tx.product.delete({
         where: { id: productId },
       });
     });
