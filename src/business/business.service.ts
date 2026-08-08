@@ -393,12 +393,14 @@ export class BusinessService {
     const products = await this.prisma.product.findMany({
       where: { business: { ownerId: userId } },
       include: { images: true, business: true },
-      orderBy: {
-        createdAt: 'desc',
-        name: 'asc',
-        price: 'asc',
-        stockCount: 'asc',
-      },
+      orderBy: [
+        {
+          createdAt: 'desc',
+        },
+        { name: 'asc' },
+        { price: 'asc' },
+        { stockCount: 'asc' },
+      ],
     });
 
     return {
@@ -423,12 +425,20 @@ export class BusinessService {
     const product = await this.prisma.product.findFirst({
       where: { AND: [{ id: productId }, { business: { ownerId: userId } }] },
       include: { images: true, business: true },
-      orderBy: {
-        createdAt: 'desc',
-        name: 'asc',
-        price: 'asc',
-        stockCount: 'asc',
-      },
+      orderBy: [
+        {
+          createdAt: 'desc',
+        },
+        {
+          name: 'asc',
+        },
+        {
+          price: 'asc',
+        },
+        {
+          stockCount: 'asc',
+        },
+      ],
     });
 
     if (!product) throw new NotFoundException('Product not found');
@@ -482,7 +492,7 @@ export class BusinessService {
       include: {
         businesses: true,
       },
-      orderBy: { name: 'asc', businesses: { _count: 'desc' } },
+      orderBy: [{ name: 'asc' }, { businesses: { _count: 'desc' } }],
     });
 
     if (
@@ -514,11 +524,13 @@ export class BusinessService {
         category: true,
         products: true,
       },
-      orderBy: {
-        name: 'asc',
-        products: { _count: 'desc' },
-        category: { name: 'asc' },
-      },
+      orderBy: [
+        {
+          name: 'asc',
+        },
+        { products: { _count: 'desc' } },
+        { category: { name: 'asc' } },
+      ],
     });
 
     return {
@@ -543,11 +555,13 @@ export class BusinessService {
         category: true,
         products: true,
       },
-      orderBy: {
-        createdAt: 'desc',
-        products: { _count: 'desc' },
-        category: { name: 'asc' },
-      },
+      orderBy: [
+        {
+          createdAt: 'desc',
+        },
+        { products: { _count: 'desc' } },
+        { category: { name: 'asc' } },
+      ],
     });
 
     return { message: 'Business data fetched successfully', data: businesses };
@@ -570,11 +584,13 @@ export class BusinessService {
         category: true,
         products: true,
       },
-      orderBy: {
-        createdAt: 'desc',
-        products: { _count: 'desc' },
-        category: { name: 'asc' },
-      },
+      orderBy: [
+        {
+          createdAt: 'desc',
+        },
+        { products: { _count: 'desc' } },
+        { category: { name: 'asc' } },
+      ],
     });
 
     return { message: 'Business data fetched successfully', data: businesses };
