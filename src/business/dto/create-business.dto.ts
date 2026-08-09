@@ -7,6 +7,7 @@ import {
   MinLength,
   MaxLength,
   IsOptional,
+  IsBoolean,
 } from 'class-validator';
 
 export class CreateBusinessDto {
@@ -42,4 +43,8 @@ export class CreateBusinessDto {
   @IsNotEmpty({ message: 'Business address is required' })
   @Type(() => String)
   address!: string;
+
+  @IsNotEmpty({ message: "Business activity status is required" })
+  @IsBoolean()
+  isActive!: boolean;
 }
