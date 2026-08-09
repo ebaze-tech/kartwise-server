@@ -9,6 +9,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFiles,
+  UploadedFile,
 } from '@nestjs/common';
 import { BusinessService } from './business.service';
 import { JwtAuthGuard } from '../accounts/guards/jwt-auth.guard';
@@ -16,10 +17,12 @@ import { RolesGuard } from '../accounts/guards/roles.guard';
 import { Role } from '@prisma/client';
 import { GetUser } from '../accounts/decorators/get-user.decorator';
 import { Roles } from '../accounts/decorators/roles.decorator';
-import { create } from 'domain';
 import { CreateBusinessDto } from './dto/create-business.dto';
 import { CreateBusinessProductDto } from './dto/create-business-product.dto';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+} from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { fileFilter } from '../utils/filter';
 import {
@@ -49,28 +52,31 @@ export class BusinessController {
   async createBusiness(
     @GetUser('id') ownerId: string,
     @Body() createBusinessDto: CreateBusinessDto,
-    @UploadedFiles() files: { bannerImage?: Express.Multer.File },
+    @UploadedFiles() files?: { bannerImage: Express.Multer.File },
   ): Promise<{ message: string; data: BusinessDto }> {
     return await this.businessService.createBusiness(
       ownerId,
       createBusinessDto,
-      files.bannerImage,
+      files,
     );
   }
 
-  // PATCH `/business/edit/:businessId`
+  // PATCH `/business/update/:businessId`
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.BUSINESS_OWNER)
-  @Patch('edit/:businessId')
+  @Patch('update/:businessId')
+  @UseInterceptors(FileInterceptor('bannerImage'))
   async editBusiness(
     @GetUser('id') ownerId: string,
     @Param('businessId') businessId: string,
     @Body() updateBusinessDto: UpdateBusinessDto,
+    @UploadedFile() bannerImage?: Express.Multer.File,
   ): Promise<{ message: string; data: BusinessDto }> {
     return await this.businessService.editBusiness(
       ownerId,
       businessId,
       updateBusinessDto,
+      bannerImage,
     );
   }
 
@@ -101,12 +107,12 @@ export class BusinessController {
   async createBusinessProduct(
     @GetUser('id') userId: string,
     @Body() createBusinessProductDto: CreateBusinessProductDto,
-    @UploadedFiles() files: { images: Express.Multer.File[] },
+    @UploadedFiles() files?: { images: Express.Multer.File[] },
   ): Promise<{ message: string; data: BusinessProductDataDto }> {
     return await this.businessService.createBusinessProduct(
       createBusinessProductDto,
-      files,
       userId,
+      files,
     );
   }
 
@@ -134,7 +140,7 @@ export class BusinessController {
   // PATCH `/business/product/:productId/status`
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.BUSINESS_OWNER)
-  @Patch('product/:productId/status')
+  @Patch('products/:productId/status')
   async editBusinessProductStatus(
     @GetUser('id') userId: string,
     @Param('productId') productId: string,
@@ -150,12 +156,37 @@ export class BusinessController {
   // DELETE `/business/product/:productId`
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.BUSINESS_OWNER)
-  @Delete('product/:productId')
+  @Delete('products/:productId')
   async deleteBusinessProduct(
     @GetUser('id') userId: string,
     @Param('productId') productId: string,
   ): Promise<{ message: string }> {
     return await this.businessService.deleteBusinessProduct(userId, productId);
+  }
+
+  // POST `/business/categories`
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Post('categories')
+  async createBusinessCategory(
+    @Body('name') name: string,
+    @Body('description') description: string,
+    @GetUser('id') adminId: string,
+  ): Promise<{
+    message: string;
+    data: {
+      id: string;
+      name: string;
+      description: string;
+      createdAt: Date;
+      updatedAt: Date;
+    };
+  }> {
+    return await this.businessService.createBusinessCategory(
+      name,
+      description,
+      adminId,
+    );
   }
 
   // GET `/business/categories`
@@ -170,11 +201,11 @@ export class BusinessController {
 
   // GET `/business/categories/:categoryId`
   @UseGuards(JwtAuthGuard)
-  @Get('categories/:categoryId')
-  async getBusinessCategoryById(
-    @Param('categoryId') categoryId: string,
+  @Get('categories/:categoryName')
+  async getBusinessCategoryByName(
+    @Param('categoryName') categoryName: string,
   ): Promise<{ message: string; data: BusinessDto[] }> {
-    return await this.businessService.getBusinessCategoryById(categoryId);
+    return await this.businessService.getBusinessCategoryByName(categoryName);
   }
 
   // GET `/business/me`
