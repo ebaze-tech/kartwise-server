@@ -39,7 +39,7 @@ export class BusinessService {
       address,
       emailAddress,
       businessCategory,
-      phoneNumber,
+      phoneNumber, isActive
     } = createBusinessDto;
 
     const user = await this.prisma.user.findUnique({ where: { id: ownerId } });
@@ -52,6 +52,8 @@ export class BusinessService {
       throw new ForbiddenException(
         'Only business owners can register a business',
       );
+
+    if (typeof isActive !== 'boolean') throw new BadRequestException('Business activity status must be a boolean value');
 
     const category = await this.prisma.businessCategory.findFirst({
       where: { name: businessCategory },
@@ -91,6 +93,7 @@ export class BusinessService {
           phoneNumber,
           address,
           categoryName: category.name,
+          isActive,
           ownerId,
         },
         include: {
