@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsString,
   IsNotEmpty,
@@ -44,6 +44,7 @@ export class CreateBusinessDto {
   @Type(() => String)
   address!: string;
 
+  @Transform(({ value }) => value === 'true' || value === true)
   @IsNotEmpty({ message: "Business activity status is required" })
   @IsBoolean()
   isActive!: boolean;

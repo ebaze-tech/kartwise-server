@@ -167,19 +167,37 @@ model Business {
   bannerImageUrl String?
   isActive       Boolean @default(false)
 
+  products            Product[]
+  businessBankDetails BusinessBankDetails[]
+
   categoryName String
   category     BusinessCategory @relation(fields: [categoryName], references: [name], onDelete: Cascade)
 
   ownerId String
   owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  products  Product[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([ownerId, categoryName])
   @@index([name, address])
   @@map("business")
+}
+
+model BusinessBankDetails {
+  id            String @id @default(uuid())
+  accountNumber String
+  bankName      String
+  accountName   String
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId])
+  @@map("business_bank_details")
 }
 
 model BusinessCategory {
