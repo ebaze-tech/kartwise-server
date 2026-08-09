@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { CreateBusinessDto } from './dto/create-business.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { Role } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { BusinessCategoriesDto } from './dto/business-category.dto';
 import { CreateBusinessProductDto } from './dto/create-business-product.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
@@ -18,39 +18,43 @@ import {
 } from './dto/business-product-data.dto';
 import { UpdateBusinessDto } from './dto/update-business.dto';
 import e from 'express';
+import { stat } from 'fs';
 
 @Injectable()
 export class BusinessService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cloudinary: CloudinaryService,
-  ) {}
+  ) { }
 
   // create business method
   async createBusiness(
     ownerId: string,
     createBusinessDto: CreateBusinessDto,
-    bannerImage?: Express.Multer.File,
+    files?: { bannerImage: Express.Multer.File },
   ): Promise<{ message: string; data: BusinessDto }> {
     const {
       name,
       description,
       address,
       emailAddress,
-      businessCategoryId,
+      businessCategory,
       phoneNumber,
     } = createBusinessDto;
 
     const user = await this.prisma.user.findUnique({ where: { id: ownerId } });
     if (!user) throw new NotFoundException('User not found');
 
+    if (user.emailVerified === false)
+      throw new ForbiddenException('Email verification required');
+
     if (user.role !== Role.BUSINESS_OWNER)
       throw new ForbiddenException(
         'Only business owners can register a business',
       );
 
-    const category = await this.prisma.businessCategory.findUnique({
-      where: { id: businessCategoryId },
+    const category = await this.prisma.businessCategory.findFirst({
+      where: { name: businessCategory },
     });
 
     if (!category)
@@ -63,6 +67,8 @@ export class BusinessService {
       throw new ConflictException(
         'A business is already registered with this email',
       );
+
+    const bannerImage = files?.bannerImage?.[0];
 
     if (bannerImage && bannerImage.size > 5 * 1024 * 1024)
       throw new BadRequestException('Banner image size exceeds 5MB limit');
@@ -84,7 +90,7 @@ export class BusinessService {
           emailAddress,
           phoneNumber,
           address,
-          categoryId: businessCategoryId,
+          categoryName: category.name,
           ownerId,
         },
         include: {
@@ -143,7 +149,10 @@ export class BusinessService {
       return business;
     });
 
-    return { message: 'Business created successfully', data: newBusiness };
+    return {
+      message: 'Business created successfully',
+      data: newBusiness as unknown as BusinessDto,
+    };
   }
 
   // edit business method
@@ -151,9 +160,14 @@ export class BusinessService {
     ownerId: string,
     businessId: string,
     updateBusinessDto: UpdateBusinessDto,
+    bannerImage?: Express.Multer.File,
   ): Promise<{ message: string; data: BusinessDto }> {
+    console.log('updateBusinessDto:', updateBusinessDto);
     const user = await this.prisma.user.findUnique({ where: { id: ownerId } });
     if (!user) throw new NotFoundException('User not found');
+
+    if (user.emailVerified === false)
+      throw new ForbiddenException('Email verification required');
 
     if (user.role !== Role.BUSINESS_OWNER)
       throw new ForbiddenException(
@@ -189,9 +203,70 @@ export class BusinessService {
       if (isBusinessOwner.ownerId !== ownerId)
         throw new ForbiddenException('You are not the owner of this business');
 
+      let data: Prisma.BusinessUpdateInput = {};
+
+      if (updateBusinessDto.name !== undefined) {
+        data.name = updateBusinessDto.name;
+      }
+
+      if (updateBusinessDto.description !== undefined) {
+        data.description = updateBusinessDto.description;
+      }
+
+      if (updateBusinessDto.emailAddress !== undefined) {
+        data.emailAddress = updateBusinessDto.emailAddress;
+      }
+
+      if (updateBusinessDto.phoneNumber !== undefined) {
+        data.phoneNumber = updateBusinessDto.phoneNumber;
+      }
+
+      if (updateBusinessDto.address !== undefined) {
+        data.address = updateBusinessDto.address;
+      }
+      if (bannerImage !== undefined && bannerImage !== null) {
+        if (bannerImage.size > 5 * 1024 * 1024) {
+          throw new BadRequestException('Banner image size exceeds 5MB limit');
+        }
+        try {
+          const imageData = await this.cloudinary.uploadBusinessBannerImage(
+            bannerImage,
+            user.id,
+            business.id,
+          );
+          data.bannerImageUrl = imageData.url;
+        } catch (error) {
+          throw new InternalServerErrorException(
+            'Failed to upload banner image. Business update cancelled.',
+          );
+        }
+      }
+
+      if (updateBusinessDto.businessCategory !== undefined) {
+        const category = await tx.businessCategory.findFirst({
+          where: {
+            name: updateBusinessDto.businessCategory,
+          },
+        });
+
+        if (!category) {
+          throw new NotFoundException('Business category not found');
+        }
+
+        data.category = {
+          connect: {
+            id: category.id,
+          },
+        };
+      }
+
+      if (Object.keys(data).length === 0) {
+        throw new BadRequestException('No valid fields provided for update');
+      }
+
       const updatedData = await tx.business.update({
         where: { id: business.id },
-        data: updateBusinessDto,
+        data: data,
         include: {
           category: true,
           products: true,
@@ -217,7 +292,10 @@ export class BusinessService {
       return updatedData;
     });
 
-    return { message: 'Business updated successfully', data: updatedBusiness };
+    return {
+      message: 'Business updated successfully',
+      data: updatedBusiness as unknown as BusinessDto,
+    };
   }
 
   async deleteBusiness(
@@ -226,6 +304,9 @@ export class BusinessService {
   ): Promise<{ message: string }> {
     const user = await this.prisma.user.findUnique({ where: { id: ownerId } });
     if (!user) throw new NotFoundException('User not found');
+
+    if (user.emailVerified === false)
+      throw new ForbiddenException('Email verification required');
 
     if (user.role !== Role.BUSINESS_OWNER)
       throw new ForbiddenException(
@@ -253,13 +334,13 @@ export class BusinessService {
   // create business product method
   async createBusinessProduct(
     createBusinessProductDto: CreateBusinessProductDto,
-    files: { images: Express.Multer.File[] },
     userId: string,
+    files?: { images: Express.Multer.File[] },
   ): Promise<{ message: string; data: BusinessProductDataDto }> {
     const { name, description, price, isAvailable, stockCount, businessName } =
       createBusinessProductDto;
 
-    if (files.images === undefined || files.images === null) {
+    if (files?.images === undefined || files.images === null) {
       throw new BadRequestException('No images uploaded for the product');
     }
 
@@ -271,6 +352,9 @@ export class BusinessService {
 
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
+
+    if (user.emailVerified === false)
+      throw new ForbiddenException('Email verification required');
 
     if (user.role !== Role.BUSINESS_OWNER)
       throw new ForbiddenException('Only business owners can create products');
@@ -351,8 +435,16 @@ export class BusinessService {
     userId: string,
     productId: string,
   ): Promise<{ message: string }> {
+    if (typeof status !== 'boolean') {
+      throw new BadRequestException(
+        'Invalid status value. Must be true or false.',
+      );
+    }
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
+
+    if (user.emailVerified === false)
+      throw new ForbiddenException('Email verification required');
 
     if (user.role !== Role.BUSINESS_OWNER)
       throw new ForbiddenException(
@@ -385,6 +477,9 @@ export class BusinessService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
+    if (user.emailVerified === false)
+      throw new ForbiddenException('Email verification required');
+
     if (user.role !== Role.BUSINESS_OWNER)
       throw new ForbiddenException(
         'Only business owners can access their products',
@@ -416,6 +511,9 @@ export class BusinessService {
   ): Promise<{ message: string; data: BusinessProductDataDto }> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
+
+    if (user.emailVerified === false)
+      throw new ForbiddenException('Email verification required');
 
     if (user.role !== Role.BUSINESS_OWNER)
       throw new ForbiddenException(
@@ -457,6 +555,9 @@ export class BusinessService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
+    if (user.emailVerified === false)
+      throw new ForbiddenException('Email verification required');
+
     const product = await this.prisma.product.findFirst({
       where: { AND: [{ id: productId }, { business: { ownerId: userId } }] },
     });
@@ -483,6 +584,44 @@ export class BusinessService {
     return { message: 'Product deleted successfully' };
   }
 
+  async createBusinessCategory(
+    name: string,
+    description: string,
+    adminId: string,
+  ): Promise<{
+    message: string;
+    data: {
+      id: string;
+      name: string;
+      description: string;
+      createdAt: Date;
+      updatedAt: Date;
+    };
+  }> {
+    if (!name || !description)
+      throw new BadRequestException(
+        'Category name and description are required',
+      );
+
+    const admin = await this.prisma.user.findUnique({ where: { id: adminId } });
+    if (!admin) throw new NotFoundException('Admin not found');
+
+    const existingCategory = await this.prisma.businessCategory.findFirst({
+      where: { name },
+    });
+    if (existingCategory)
+      throw new BadRequestException('Category already exists');
+
+    const category = await this.prisma.businessCategory.create({
+      data: { name, description },
+    });
+
+    return {
+      message: 'Business category created successfully',
+      data: category,
+    };
+  }
+
   // get business categories method
   async getBusinessCategories(): Promise<{
     message: string;
@@ -490,7 +629,15 @@ export class BusinessService {
   }> {
     const categories = await this.prisma.businessCategory.findMany({
       include: {
-        businesses: true,
+        businesses: {
+          include: {
+            products: {
+              include: {
+                images: true,
+              },
+            },
+          },
+        },
       },
       orderBy: [{ name: 'asc' }, { businesses: { _count: 'desc' } }],
     });
@@ -505,37 +652,43 @@ export class BusinessService {
 
     return {
       message: 'Business categories data fetched successfully',
-      data: categories,
+      data: categories as unknown as BusinessCategoriesDto[],
     };
   }
 
-  // get businesses by category id method
-  async getBusinessCategoryById(
-    categoryId: string,
+  // get businesses by category name method
+  async getBusinessCategoryByName(
+    categoryName: string,
   ): Promise<{ message: string; data: BusinessDto[] }> {
     const category = await this.prisma.businessCategory.findUnique({
-      where: { id: categoryId },
+      where: { name: categoryName },
     });
     if (!category) throw new NotFoundException('Category not found');
 
-    const businesses = await this.prisma.business.findMany({
-      where: { categoryId: category.id },
+    const businesses = await this.prisma.businessCategory.findMany({
+      where: { name: category.name },
       include: {
-        category: true,
-        products: true,
+        businesses: {
+          include: {
+            products: {
+              include: {
+                images: true,
+              },
+            },
+          },
+        },
       },
       orderBy: [
         {
           name: 'asc',
         },
-        { products: { _count: 'desc' } },
-        { category: { name: 'asc' } },
+        { businesses: { _count: 'desc' } },
       ],
     });
 
     return {
-      message: 'Businesses data fetched successfully',
-      data: businesses,
+      message: 'Business categories data fetched successfully',
+      data: businesses as unknown as BusinessDto[],
     };
   }
 
@@ -546,6 +699,8 @@ export class BusinessService {
     const user = await this.prisma.user.findUnique({ where: { id: ownerId } });
     if (!user) throw new NotFoundException('User not found');
 
+    if (user.emailVerified === false)
+      throw new ForbiddenException('Email verification required');
     if (user.role !== Role.BUSINESS_OWNER)
       throw new ForbiddenException('Not a business owner');
 
@@ -553,7 +708,11 @@ export class BusinessService {
       where: { ownerId },
       include: {
         category: true,
-        products: true,
+        products: {
+          include: {
+            images: true,
+          },
+        },
       },
       orderBy: [
         {
@@ -564,7 +723,10 @@ export class BusinessService {
       ],
     });
 
-    return { message: 'Business data fetched successfully', data: businesses };
+    return {
+      message: 'Business data fetched successfully',
+      data: businesses as unknown as BusinessDto[],
+    };
   }
 
   // get all businesses method
@@ -573,6 +735,9 @@ export class BusinessService {
   ): Promise<{ message: string; data: BusinessDto[] }> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
+
+    if (user.emailVerified === false)
+      throw new ForbiddenException('Email verification required');
 
     if (user.role !== Role.ADMIN)
       throw new ForbiddenException(
@@ -593,6 +758,9 @@ export class BusinessService {
       ],
     });
 
-    return { message: 'Business data fetched successfully', data: businesses };
+    return {
+      message: 'Business data fetched successfully',
+      data: businesses as unknown as BusinessDto[],
+    };
   }
 }

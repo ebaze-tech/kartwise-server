@@ -33,10 +33,10 @@ export class CreateBusinessDto {
   @Type(() => String)
   phoneNumber!: string;
 
-  @IsUUID()
+  @IsString()
   @IsNotEmpty({ message: 'Business category is required' })
   @Type(() => String)
-  businessCategoryId!: string;
+  businessCategory!: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Business address is required' })

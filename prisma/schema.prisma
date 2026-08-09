@@ -157,7 +157,6 @@ model Outbox {
   @@map("outbox")
 }
 
-
 model Business {
   id             String  @id @default(uuid())
   name           String
@@ -166,26 +165,26 @@ model Business {
   phoneNumber    String
   address        String
   bannerImageUrl String?
-  isActive       Boolean @default(true)
+  isActive       Boolean @default(false)
 
-  categoryId String
-  category   BusinessCategory @relation(fields: [categoryId], references: [id])
+  categoryName String
+  category     BusinessCategory @relation(fields: [categoryName], references: [name], onDelete: Cascade)
 
-  ownerId String @unique
+  ownerId String
   owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   products  Product[]
 
-  @@index([ownerId, categoryId])
+  @@index([ownerId, categoryName])
   @@index([name, address])
   @@map("business")
 }
 
 model BusinessCategory {
   id          String     @id @default(uuid())
-  name        String
+  name        String     @unique
   description String
   businesses  Business[]
 
@@ -207,13 +206,28 @@ model Product {
   businessId  String
   business    Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  productCategory   ProductCategory? @relation(fields: [productCategoryId], references: [id])
+  productCategoryId String?
 
   @@index([businessId])
   @@index([name])
   @@index([isAvailable])
   @@map("product")
+}
+
+model ProductCategory {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String
+  products    Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@map("product_category")
 }
 
 model ProductImages {
