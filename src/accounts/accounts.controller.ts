@@ -25,7 +25,7 @@ import { ResendVerificationDto } from './dto/resend-otp.dto';
 
 @Controller('accounts')
 export class AccountsController {
-  constructor(private readonly accountsService: AccountsService) {}
+  constructor(private readonly accountsService: AccountsService) { }
 
   @Post('signup')
   async createAccount(
@@ -93,6 +93,15 @@ export class AccountsController {
     return await this.accountsService.getProfile(userId);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Patch('me')
+  async updateProfile(
+    @GetUser('id') userId: string,
+    @Body() updateAccountDto: UpdateAccountDto,
+  ): Promise<{ message: string; data: UserAccountDto }> {
+    return await this.accountsService.updateProfile(userId, updateAccountDto);
+  }
+  
   @Post('refresh-token')
   async refreshToken(
     @Body('refreshToken') refreshToken: string,

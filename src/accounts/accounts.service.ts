@@ -20,6 +20,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ResendVerificationDto } from './dto/resend-otp.dto';
+import { UpdateAccountDto } from './dto/update-account.dto';
 
 @Injectable()
 export class AccountsService {
@@ -27,7 +28,7 @@ export class AccountsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   //   create account method
   async createAccount(
@@ -76,7 +77,7 @@ export class AccountsService {
             email: true,
             role: true,
             profilePictureUrl: true,
-            emailVerified: true,
+            emailVerified: true, university: true,
             createdAt: true,
             updatedAt: true,
           },
@@ -410,7 +411,7 @@ export class AccountsService {
 
     return {
       message:
-        'If an account with that email exists, we have sent a password reset code.',
+        'Password reset request received. If the email exists, you will receive an OTP to reset your password.',
     };
   }
 
@@ -493,7 +494,7 @@ export class AccountsService {
         email: true,
         firstName: true,
         lastName: true,
-        username: true,
+        username: true, university: true,
         role: true,
         profilePictureUrl: true,
         emailVerified: true,
@@ -505,6 +506,34 @@ export class AccountsService {
     if (!user) throw new NotFoundException('User not found');
 
     return { message: 'User profile retrieved successfully', data: user };
+  }
+
+  async updateProfile(
+    userId: string,
+    updateAccountDto: UpdateAccountDto,
+  ): Promise<{ message: string; data: UserAccountDto }> {
+    const { university } = updateAccountDto;
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: { university }, select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        username: true, university: true,
+        role: true,
+        profilePictureUrl: true,
+        emailVerified: true,
+        createdAt: true,
+        updatedAt: true,
+      }
+    });
+
+
+    return { message: 'User profile updated successfully', data: updatedUser };
   }
 
   // refresh token method
@@ -721,6 +750,7 @@ export class AccountsService {
         'Otp has been resent. Please check your email for the verification code',
     };
   }
+  
   // delete account method
   async deleteAccount(userId: string): Promise<{ message: string }> {
     await this.prisma.$transaction(async (tx) => {
