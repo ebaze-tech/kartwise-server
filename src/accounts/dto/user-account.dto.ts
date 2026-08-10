@@ -5,6 +5,7 @@ export class UserAccountDto {
   username!: string;
   firstName!: string;
   lastName!: string;
+  university?: string | null;
   role!: Role;
   email!: string;
   profilePictureUrl?: string | null;
