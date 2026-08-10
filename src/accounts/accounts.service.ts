@@ -751,7 +751,6 @@ export class AccountsService {
     };
   }
 
-  
   // delete account method
   async deleteAccount(userId: string): Promise<{ message: string }> {
     await this.prisma.$transaction(async (tx) => {
