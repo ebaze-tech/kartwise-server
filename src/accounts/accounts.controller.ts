@@ -60,8 +60,8 @@ export class AccountsController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch('change-email')
-  async changeEmail(
+  @Patch('request-email-update')
+  async changeEmailRequest(
     @GetUser('id') userId: string,
     @Body() updateEmailDto: UpdateEmailDto,
   ): Promise<{ message: string }> {
@@ -72,8 +72,8 @@ export class AccountsController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch('update-email')
-  async updateEmail(
+  @Patch('confirm-email-update')
+  async changeEmailConfirm(
     @GetUser('id') userId: string,
     @Body('otp') otp: string,
   ): Promise<{ message: string }> {
@@ -108,7 +108,7 @@ export class AccountsController {
   ): Promise<{ message: string; data: UserAccountDto }> {
     return await this.accountsService.updateProfile(userId, updateAccountDto);
   }
-  
+
   @Post('refresh-token')
   async refreshToken(
     @Body('refreshToken') refreshToken: string,
