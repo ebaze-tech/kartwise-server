@@ -14,6 +14,7 @@ import { ResetPasswordConfirmationEvent } from '../accounts/events/reset-passwor
 import { EmailVerifiedEvent } from '../accounts/events/email-verified.event';
 import { AccountDeletedEvent } from '../accounts/events/account-deleted.event';
 import { ResendOtpEvent } from '../accounts/events/resend-otp.event';
+import { BusinessCreatedEvent } from '../business/events/business-created.event';
 
 config();
 @Injectable()
@@ -1130,6 +1131,56 @@ export class NotificationService {
       await this.trySend(email);
     } catch (error) {
       console.error('Error sending resend verification email:', error);
+    }
+  }
+
+  async sendBusinessWelcomeEmail(event: BusinessCreatedEvent): Promise<void> {
+    try {
+      // Fetch the owner to get their email address and first name
+      const owner = await this.prisma.user.findUnique({
+        where: { id: event.ownerId },
+      });
+
+      if (!owner) {
+        console.error(`Owner not found for business: ${event.businessId}`);
+        return;
+      }
+
+      const email = await this.prisma.sentEmail.create({
+        data: {
+          userId: owner.id,
+          recipient: owner.email,
+          subject: 'Your Store is Live on KartWise! 🚀',
+          from: process.env.WELCOME_NOTIFICATION_MAIL!,
+          body: `
+          <!DOCTYPE html>
+          <html lang="en">
+          <body style="margin: 0; padding: 20px; font-family: sans-serif; background-color: #f3f4f6;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px; border-radius: 12px;">
+              <h2 style="color: #111827; text-align: center;">Congratulations, ${owner.firstName}!</h2>
+              <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">
+                Your business <strong>${event.businessName}</strong> has been successfully registered on KartWise.
+              </p>
+              <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">
+                You can now start adding products to your catalog and reaching buyers across campus.
+              </p>
+              <div style="text-align: center; margin-top: 30px;">
+                <a href="https://your-app-link.com/dashboard" style="background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                  Go to Dashboard
+                </a>
+              </div>
+            </div>
+          </body>
+          </html>`,
+          status: 'PENDING',
+          attempts: 0,
+          eventType: 'business.created',
+        },
+      });
+
+      await this.trySend(email);
+    } catch (error) {
+      console.error('Error sending business welcome email:', error);
     }
   }
 

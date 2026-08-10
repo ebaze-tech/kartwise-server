@@ -46,6 +46,7 @@ model User {
   sessions                Session[]
   sentEmails              SentEmail[]
   emailVerificationTokens EmailVerificationToken[]
+  businesses              Business[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -155,4 +156,110 @@ model Outbox {
 
   @@index([status])
   @@map("outbox")
+}
+
+model Business {
+  id             String  @id @default(uuid())
+  name           String
+  description    String
+  emailAddress   String  @unique
+  phoneNumber    String
+  address        String
+  bannerImageUrl String?
+  isActive       Boolean @default(false)
+
+  products            Product[]
+  businessBankDetails BusinessBankDetails[]
+
+  categoryName String
+  category     BusinessCategory @relation(fields: [categoryName], references: [name], onDelete: Cascade)
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId, categoryName])
+  @@index([name, address])
+  @@map("business")
+}
+
+model BusinessBankDetails {
+  id            String @id @default(uuid())
+  accountNumber String
+  bankName      String
+  accountName   String
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId])
+  @@map("business_bank_details")
+}
+
+model BusinessCategory {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  description String
+  businesses  Business[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@map("business_category")
+}
+
+model Product {
+  id          String          @id @default(uuid())
+  name        String
+  description String
+  price       Decimal         @db.Decimal(10, 2)
+  isAvailable Boolean
+  images      ProductImages[]
+  stockCount  Int             @default(0)
+  businessId  String
+  business    Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  productCategory   ProductCategory? @relation(fields: [productCategoryId], references: [id])
+  productCategoryId String?
+
+  @@index([businessId])
+  @@index([name])
+  @@index([isAvailable])
+  @@map("product")
+}
+
+model ProductCategory {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String
+  products    Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@map("product_category")
+}
+
+model ProductImages {
+  id       String @id @default(uuid())
+  url      String
+  publicId String
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@map("product_image")
 }

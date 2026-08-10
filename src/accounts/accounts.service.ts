@@ -35,15 +35,15 @@ export class AccountsService {
     createAccountDto: CreateAccountDto,
   ): Promise<{ message: string; data: UserAccountDto }> {
     const { email, password, role, firstName, lastName } = createAccountDto;
-    if (!email || !password || !role || !firstName || !lastName) {
-      throw new Error('All fields are required');
-    }
 
     try {
-      if (role !== Role.BUSINESS_OWNER && role !== Role.BUYER)
-        throw new BadRequestException(
-          "Invalid role. Role must be either 'BUSINESS_OWNER' or 'BUYER'",
-        );
+      if (
+        role !== Role.ADMIN &&
+        role !== Role.BUSINESS_OWNER &&
+        role !== Role.BUYER
+      ) {
+        throw new BadRequestException('Invalid role');
+      }
 
       // check existing user
       const user = await this.prisma.user.findUnique({ where: { email } });
@@ -130,6 +130,22 @@ export class AccountsService {
     }
   }
 
+  async createAdminAccount(
+    createAccountDto: CreateAccountDto,
+  ): Promise<{ message: string; data: UserAccountDto }> {
+    const { email, password, firstName, lastName } = createAccountDto;
+
+    const role = Role.ADMIN;
+
+    return await this.createAccount({
+      email,
+      password,
+      role,
+      firstName,
+      lastName,
+    });
+  }
+
   // login account methodq
   async loginAccount(loginAccountDto: LoginAccountDto): Promise<{
     message: string;
@@ -138,7 +154,6 @@ export class AccountsService {
     role: Role;
   }> {
     const { email, password } = loginAccountDto;
-    if (!email || !password) throw new Error('All fields are required');
 
     try {
       const user = await this.prisma.user.findUnique({ where: { email } });
@@ -222,6 +237,8 @@ export class AccountsService {
 
   // logout account method
   async logoutAccount(sessionId: string): Promise<{ message: string }> {
+    if (!sessionId) throw new BadRequestException('Session ID is required');
+
     await this.prisma.$transaction(async (tx) => {
       const session = await this.prisma.session.findUnique({
         where: { id: sessionId },
@@ -265,8 +282,6 @@ export class AccountsService {
     userId: string,
   ): Promise<{ message: string }> {
     const { currentEmail, newEmail } = updateEmailDto;
-
-    if (!currentEmail || !newEmail) throw new Error('All fields are required');
 
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
@@ -375,8 +390,6 @@ export class AccountsService {
   ): Promise<{ message: string }> {
     const { email } = forgotPasswordDto;
 
-    if (!email) throw new BadRequestException('Email is required');
-
     const user = await this.prisma.user.findUnique({ where: { email } });
 
     if (user) {
@@ -420,12 +433,6 @@ export class AccountsService {
     resetPasswordDto: ResetPasswordDto,
   ): Promise<{ message: string }> {
     const { email, otp, newPassword } = resetPasswordDto;
-
-    if (!email || !otp || !newPassword) {
-      throw new BadRequestException(
-        'Email, OTP, and new password are required',
-      );
-    }
 
     const user = await this.prisma.user.findUnique({ where: { email } });
 
@@ -595,8 +602,6 @@ export class AccountsService {
   ): Promise<{ message: string }> {
     const { currentPassword, newPassword } = changePasswordDto;
 
-    if (!currentPassword || !newPassword)
-      throw new Error('Current and new passwords are required');
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
@@ -638,7 +643,6 @@ export class AccountsService {
     verifyEmailDto: VerifyEmailDto,
   ): Promise<{ message: string }> {
     const { otp } = verifyEmailDto;
-    if (!otp) throw new Error('OTP is required');
 
     const user = await this.prisma.user.findUnique({
       where: { id: verifyEmailDto.userId },
@@ -696,15 +700,11 @@ export class AccountsService {
     return { message: 'Email verified successfully' };
   }
 
-  // resend otp method
-
   // resend verification email method
   async resendVerificationEmail(
     resendVerificationDto: ResendVerificationDto,
   ): Promise<{ message: string }> {
     const { email } = resendVerificationDto;
-
-    if (!email) throw new BadRequestException('Email is required');
 
     const user = await this.prisma.user.findUnique({ where: { email } });
 
@@ -750,6 +750,7 @@ export class AccountsService {
         'Otp has been resent. Please check your email for the verification code',
     };
   }
+
   
   // delete account method
   async deleteAccount(userId: string): Promise<{ message: string }> {
