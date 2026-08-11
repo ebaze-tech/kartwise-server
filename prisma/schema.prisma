@@ -26,6 +26,20 @@ enum OutboxStatus {
   FAILED
 }
 
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
 model User {
   id                String    @id @default(uuid())
   username          String
@@ -47,9 +61,11 @@ model User {
   sentEmails              SentEmail[]
   emailVerificationTokens EmailVerificationToken[]
   businesses              Business[]
+  orders                  Order[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  carts     Cart?
 
   @@index([username])
   @@index([email])
@@ -170,6 +186,7 @@ model Business {
 
   products            Product[]
   businessBankDetails BusinessBankDetails[]
+  storeOrders         StoreOrder[]
 
   categoryName String
   category     BusinessCategory @relation(fields: [categoryName], references: [name], onDelete: Cascade)
@@ -202,10 +219,11 @@ model BusinessBankDetails {
 }
 
 model BusinessCategory {
-  id          String     @id @default(uuid())
-  name        String     @unique
+  id          String @id @default(uuid())
+  name        String @unique
   description String
-  businesses  Business[]
+
+  businesses Business[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -215,20 +233,26 @@ model BusinessCategory {
 }
 
 model Product {
-  id          String          @id @default(uuid())
+  id          String  @id @default(uuid())
   name        String
   description String
-  price       Decimal         @db.Decimal(10, 2)
+  price       Decimal @db.Decimal(10, 2)
   isAvailable Boolean
-  images      ProductImages[]
-  stockCount  Int             @default(0)
-  businessId  String
-  business    Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  stockCount  Int     @default(0)
 
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  productCategory   ProductCategory? @relation(fields: [productCategoryId], references: [id])
-  productCategoryId String?
+  images         ProductImages[]
+  productReviews ProductReview[]
+  orderItems     OrderItem[]
+  cartItems      CartItem[]
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  productCategoryId String
+  productCategory   ProductCategory @relation(fields: [productCategoryId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([businessId])
   @@index([name])
@@ -262,4 +286,127 @@ model ProductImages {
 
   @@index([productId])
   @@map("product_image")
+}
+
+model ProductReview {
+  id      String  @id @default(uuid())
+  rating  Int
+  comment String?
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@map("product_review")
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  totalAmount     Decimal     @db.Decimal(10, 2)
+  status          OrderStatus @default(PENDING)
+  shippingAddress String?
+
+  storeOrders StoreOrder[]
+  payment     Payment?
+
+  buyerId String
+  buyer   User   @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([buyerId])
+  @@index([status])
+  @@map("orders")
+}
+
+model StoreOrder {
+  id String @id @default(uuid())
+
+  status   OrderStatus @default(PENDING)
+  subTotal Decimal     @db.Decimal(10, 2)
+
+  orderItems OrderItem[]
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([orderId])
+  @@map("store_orders")
+}
+
+model OrderItem {
+  id       String  @id @default(uuid())
+  quantity Int
+  price    Decimal @db.Decimal(10, 2)
+
+  storeOrderId String
+  storeOrder   StoreOrder @relation(fields: [storeOrderId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@map("order_items")
+}
+
+model Cart {
+  id String @id @default(uuid())
+
+  cartItems CartItem[]
+
+  buyerId String @unique
+  buyer   User   @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([buyerId])
+  @@map("cart")
+}
+
+model CartItem {
+  id       String @id @default(uuid())
+  quantity Int
+
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([cartId])
+  @@index([productId])
+  @@map("cart_items")
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  amount        Decimal       @db.Decimal(10, 2)
+  paymentMethod String
+  status        PaymentStatus @default(PENDING)
+
+  orderId String @unique
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+  @@map("payments")
 }
