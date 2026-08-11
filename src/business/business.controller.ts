@@ -31,10 +31,11 @@ import {
 } from './dto/business-product-data.dto';
 import { BusinessCategoriesDto } from './dto/business-category.dto';
 import { UpdateBusinessDto } from './dto/update-business.dto';
+import { ProductCategoriesDto } from './dto/product-category.dto';
 
 @Controller('business')
 export class BusinessController {
-  constructor(private readonly businessService: BusinessService) {}
+  constructor(private readonly businessService: BusinessService) { }
 
   // POST `/business/setup`
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -197,6 +198,12 @@ export class BusinessController {
     data: BusinessCategoriesDto[];
   }> {
     return await this.businessService.getBusinessCategories();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('product/categories')
+  async getBusinessProductCategories(): Promise<{ message: string, data: ProductCategoriesDto[] }> {
+    return await this.businessService.getProductCategories();
   }
 
   // GET `/business/categories/:categoryId`

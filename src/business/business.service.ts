@@ -19,6 +19,7 @@ import {
 import { UpdateBusinessDto } from './dto/update-business.dto';
 import e from 'express';
 import { stat } from 'fs';
+import { ProductCategoriesDto } from './dto/product-category.dto';
 
 @Injectable()
 export class BusinessService {
@@ -662,6 +663,37 @@ export class BusinessService {
     return {
       message: 'Business categories data fetched successfully',
       data: categories as unknown as BusinessCategoriesDto[],
+    };
+  }
+
+  // get product categories method
+  async getProductCategories(): Promise<{
+    message: string;
+    data: ProductCategoriesDto[];
+  }> {
+    const categories = await this.prisma.productCategory.findMany({
+      include: {
+        products: {
+          include: {
+            productReviews: true, images: true
+          },
+        },
+      },
+      orderBy: [{ name: 'asc' }, { products: { _count: 'desc' } }, { products: { productReviews: { _count: 'desc' } } }, { products: { productReviews: { rating: 'desc' } } }, { products: { productReviews: { createdAt: 'desc' } } }],
+    });
+
+    if (
+      categories.length === 0 ||
+      categories === null ||
+      categories === undefined ||
+      !categories
+    )
+      throw new NotFoundException('No product categories found');
+
+    return {
+      message: 'Product categories data fetched successfully',
+
+      data: categories as unknown as ProductCategoriesDto[],
     };
   }
 
