@@ -48,4 +48,9 @@ export class CreateBusinessProductDto {
   @IsString({ message: 'Business name must be a string' })
   @Type(() => String)
   businessName!: string;
+
+  @IsNotEmpty({ message: 'Product category is required' })
+  @IsString({ message: 'Product category must be a string' })
+  @Type(() => String)
+  productCategoryName!: string;
 }
