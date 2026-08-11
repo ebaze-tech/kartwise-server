@@ -340,7 +340,7 @@ export class BusinessService {
     userId: string,
     files?: { images: Express.Multer.File[] },
   ): Promise<{ message: string; data: BusinessProductDataDto }> {
-    const { name, description, price, isAvailable, stockCount, businessName } =
+    const { name, description, price, isAvailable, stockCount, businessName, productCategoryName } =
       createBusinessProductDto;
 
     if (files?.images === undefined || files.images === null) {
@@ -367,6 +367,11 @@ export class BusinessService {
     });
     if (!business) throw new NotFoundException('Business not found');
 
+    const productCategory = await this.prisma.productCategory.findUnique({
+      where: { name: productCategoryName },
+    });
+    if (!productCategory) throw new NotFoundException('Product category not found');
+
     const existingProduct = await this.prisma.product.findFirst({
       where: { AND: [{ name }, { businessId: business.id }] },
     });
@@ -384,6 +389,7 @@ export class BusinessService {
           isAvailable,
           stockCount: Number(stockCount),
           businessId: business.id,
+          productCategoryName: productCategory.name,
         },
       });
 

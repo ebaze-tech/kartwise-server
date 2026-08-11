@@ -248,8 +248,8 @@ model Product {
   businessId String
   business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
-  productCategoryId String
-  productCategory   ProductCategory @relation(fields: [productCategoryId], references: [id])
+  productCategoryName String
+  productCategory   ProductCategory @relation(fields: [productCategoryName], references: [name])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
