@@ -9,6 +9,7 @@ import { AccountsController } from './accounts/accounts.controller';
 import { AppController } from './app.controller';
 import { BusinessModule } from './business/business.module';
 import { AdminModule } from './admin/admin.module';
+import { ProductsModule } from './products/products.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AdminModule } from './admin/admin.module';
     ScheduleModule.forRoot(),
     BusinessModule,
     AdminModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [],
