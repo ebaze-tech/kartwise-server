@@ -200,8 +200,34 @@ export class BusinessController {
     return await this.businessService.getBusinessCategories();
   }
 
+  // POST `/business/products/categories`
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Post('categories')
+  async createProductCategory(
+    @Body('name') name: string,
+    @Body('description') description: string,
+    @GetUser('id') adminId: string,
+  ): Promise<{
+    message: string;
+    data: {
+      id: string;
+      name: string;
+      description: string;
+      createdAt: Date;
+      updatedAt: Date;
+    };
+  }> {
+    return await this.businessService.createProductCategory(
+      name,
+      description,
+      adminId,
+    );
+  }
+
+  // GET `/business/products/categories`
   @UseGuards(JwtAuthGuard)
-  @Get('product/categories')
+  @Get('products/categories')
   async getBusinessProductCategories(): Promise<{ message: string, data: ProductCategoriesDto[] }> {
     return await this.businessService.getProductCategories();
   }

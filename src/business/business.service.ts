@@ -632,6 +632,44 @@ export class BusinessService {
     };
   }
 
+
+  async createProductCategory(
+    name: string,
+    description: string,
+    adminId: string,
+  ): Promise<{
+    message: string;
+    data: {
+      id: string;
+      name: string;
+      description: string;
+      createdAt: Date;
+      updatedAt: Date;
+    };
+  }> {
+    if (!name || !description)
+      throw new BadRequestException(
+        'Category name and description are required',
+      );
+
+    const admin = await this.prisma.user.findUnique({ where: { id: adminId } });
+    if (!admin) throw new NotFoundException('Admin not found');
+
+    const existingCategory = await this.prisma.productCategory.findFirst({
+      where: { name },
+    });
+    if (existingCategory)
+      throw new BadRequestException('Category already exists');
+
+    const category = await this.prisma.productCategory.create({
+      data: { name, description },
+    });
+
+    return {
+      message: 'Product category created successfully',
+      data: category,
+    };
+  }
   // get business categories method
   async getBusinessCategories(): Promise<{
     message: string;
