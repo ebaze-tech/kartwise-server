@@ -670,6 +670,7 @@ export class BusinessService {
       data: category,
     };
   }
+  
   // get business categories method
   async getBusinessCategories(): Promise<{
     message: string;

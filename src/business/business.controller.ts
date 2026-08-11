@@ -37,6 +37,43 @@ import { ProductCategoriesDto } from './dto/product-category.dto';
 export class BusinessController {
   constructor(private readonly businessService: BusinessService) { }
 
+  // GET `/business/me`
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BUSINESS_OWNER)
+  @Get('me')
+  async getMyBusinesses(
+    @GetUser('id') ownerId: string,
+  ): Promise<{ message: string; data: BusinessDto[] }> {
+    return await this.businessService.getMyBusinesses(ownerId);
+  }
+
+  // GET `/business/categories`
+  @UseGuards(JwtAuthGuard)
+  @Get('categories')
+  async getBusinessCategories(): Promise<{
+    message: string;
+    data: BusinessCategoriesDto[];
+  }> {
+    return await this.businessService.getBusinessCategories();
+  }
+
+  // GET `/business/products/categories`
+  @UseGuards(JwtAuthGuard)
+  @Get('products/categories')
+  async getBusinessProductCategories(): Promise<{ message: string; data: ProductCategoriesDto[] }> {
+    return await this.businessService.getProductCategories();
+  }
+
+  // GET `/business/products`
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BUSINESS_OWNER)
+  @Get('products')
+  async getBusinessProducts(
+    @GetUser('id') userId: string,
+  ): Promise<{ message: string; data: BusinessProductDataDto[] }> {
+    return await this.businessService.getBusinessProducts(userId);
+  }
+
   // POST `/business/setup`
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.BUSINESS_OWNER)
@@ -60,6 +97,128 @@ export class BusinessController {
       createBusinessDto,
       files,
     );
+  }
+
+  // POST `/business/product`
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BUSINESS_OWNER)
+  @Post('product')
+  @UseInterceptors(
+    FileFieldsInterceptor([{ name: 'images', maxCount: 5 }], {
+      storage: memoryStorage(),
+      fileFilter: fileFilter,
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
+  )
+  async createBusinessProduct(
+    @GetUser('id') userId: string,
+    @Body() createBusinessProductDto: CreateBusinessProductDto,
+    @UploadedFiles() files?: { images: Express.Multer.File[] },
+  ): Promise<{ message: string; data: BusinessProductDataDto }> {
+    return await this.businessService.createBusinessProduct(
+      createBusinessProductDto,
+      userId,
+      files,
+    );
+  }
+
+  // POST `/business/categories`
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Post('categories')
+  async createBusinessCategory(
+    @Body('name') name: string,
+    @Body('description') description: string,
+    @GetUser('id') adminId: string,
+  ): Promise<{
+    message: string;
+    data: {
+      id: string;
+      name: string;
+      description: string;
+      createdAt: Date;
+      updatedAt: Date;
+    };
+  }> {
+    return await this.businessService.createBusinessCategory(
+      name,
+      description,
+      adminId,
+    );
+  }
+
+  // POST `/business/products/categories`
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Post('products/categories')
+  async createProductCategory(
+    @Body('name') name: string,
+    @Body('description') description: string,
+    @GetUser('id') adminId: string,
+  ): Promise<{
+    message: string;
+    data: {
+      id: string;
+      name: string;
+      description: string;
+      createdAt: Date;
+      updatedAt: Date;
+    };
+  }> {
+    return await this.businessService.createProductCategory(
+      name,
+      description,
+      adminId,
+    );
+  }
+
+  // GET `/business/categories/:categoryName`
+  @UseGuards(JwtAuthGuard)
+  @Get('categories/:categoryName')
+  async getBusinessCategoryByName(
+    @Param('categoryName') categoryName: string,
+  ): Promise<{ message: string; data: BusinessDto[] }> {
+    return await this.businessService.getBusinessCategoryByName(categoryName);
+  }
+
+  // GET `/business/products/:productId`
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BUSINESS_OWNER)
+  @Get('products/:productId')
+  async getBusinessProductById(
+    @GetUser('id') userId: string,
+    @Param('productId') productId: string,
+  ): Promise<{ message: string; data: BusinessProductDataDto }> {
+    return await this.businessService.getBusinessProductById(userId, productId);
+  }
+
+  // PATCH `/business/products/:productId/status`
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BUSINESS_OWNER)
+  @Patch('products/:productId/status')
+  async editBusinessProductStatus(
+    @GetUser('id') userId: string,
+    @Param('productId') productId: string,
+    @Body('status') status: boolean,
+  ): Promise<{ message: string }> {
+    return await this.businessService.editBusinessProductStatus(
+      status,
+      userId,
+      productId,
+    );
+  }
+
+  // DELETE `/business/products/:productId`
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.BUSINESS_OWNER)
+  @Delete('products/:productId')
+  async deleteBusinessProduct(
+    @GetUser('id') userId: string,
+    @Param('productId') productId: string,
+  ): Promise<{ message: string }> {
+    return await this.businessService.deleteBusinessProduct(userId, productId);
   }
 
   // PATCH `/business/update/:businessId`
@@ -90,164 +249,5 @@ export class BusinessController {
     @Param('businessId') businessId: string,
   ): Promise<{ message: string }> {
     return await this.businessService.deleteBusiness(ownerId, businessId);
-  }
-
-  // POST `/business/product`
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.BUSINESS_OWNER)
-  @Post('product')
-  @UseInterceptors(
-    FileFieldsInterceptor([{ name: 'images', maxCount: 5 }], {
-      storage: memoryStorage(),
-      fileFilter: fileFilter,
-      limits: {
-        fileSize: 5 * 1024 * 1024,
-      },
-    }),
-  )
-  async createBusinessProduct(
-    @GetUser('id') userId: string,
-    @Body() createBusinessProductDto: CreateBusinessProductDto,
-    @UploadedFiles() files?: { images: Express.Multer.File[] },
-  ): Promise<{ message: string; data: BusinessProductDataDto }> {
-    return await this.businessService.createBusinessProduct(
-      createBusinessProductDto,
-      userId,
-      files,
-    );
-  }
-
-  // GET `/business/products`
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.BUSINESS_OWNER)
-  @Get('products')
-  async getBusinessProducts(
-    @GetUser('id') userId: string,
-  ): Promise<{ message: string; data: BusinessProductDataDto[] }> {
-    return await this.businessService.getBusinessProducts(userId);
-  }
-
-  // GET `/business/products/:productId`
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.BUSINESS_OWNER)
-  @Get('products/:productId')
-  async getBusinessProductById(
-    @GetUser('id') userId: string,
-    @Param('productId') productId: string,
-  ): Promise<{ message: string; data: BusinessProductDataDto }> {
-    return await this.businessService.getBusinessProductById(userId, productId);
-  }
-
-  // PATCH `/business/product/:productId/status`
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.BUSINESS_OWNER)
-  @Patch('products/:productId/status')
-  async editBusinessProductStatus(
-    @GetUser('id') userId: string,
-    @Param('productId') productId: string,
-    @Body('status') status: boolean,
-  ): Promise<{ message: string }> {
-    return await this.businessService.editBusinessProductStatus(
-      status,
-      userId,
-      productId,
-    );
-  }
-
-  // DELETE `/business/product/:productId`
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.BUSINESS_OWNER)
-  @Delete('products/:productId')
-  async deleteBusinessProduct(
-    @GetUser('id') userId: string,
-    @Param('productId') productId: string,
-  ): Promise<{ message: string }> {
-    return await this.businessService.deleteBusinessProduct(userId, productId);
-  }
-
-  // POST `/business/categories`
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
-  @Post('categories')
-  async createBusinessCategory(
-    @Body('name') name: string,
-    @Body('description') description: string,
-    @GetUser('id') adminId: string,
-  ): Promise<{
-    message: string;
-    data: {
-      id: string;
-      name: string;
-      description: string;
-      createdAt: Date;
-      updatedAt: Date;
-    };
-  }> {
-    return await this.businessService.createBusinessCategory(
-      name,
-      description,
-      adminId,
-    );
-  }
-
-  // GET `/business/categories`
-  @UseGuards(JwtAuthGuard)
-  @Get('categories')
-  async getBusinessCategories(): Promise<{
-    message: string;
-    data: BusinessCategoriesDto[];
-  }> {
-    return await this.businessService.getBusinessCategories();
-  }
-
-  // POST `/business/products/categories`
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
-  @Post('products/categories')
-  async createProductCategory(
-    @Body('name') name: string,
-    @Body('description') description: string,
-    @GetUser('id') adminId: string,
-  ): Promise<{
-    message: string;
-    data: {
-      id: string;
-      name: string;
-      description: string;
-      createdAt: Date;
-      updatedAt: Date;
-    };
-  }> {
-    return await this.businessService.createProductCategory(
-      name,
-      description,
-      adminId,
-    );
-  }
-
-  // GET `/business/products/categories`
-  @UseGuards(JwtAuthGuard)
-  @Get('products/categories')
-  async getBusinessProductCategories(): Promise<{ message: string, data: ProductCategoriesDto[] }> {
-    return await this.businessService.getProductCategories();
-  }
-
-  // GET `/business/categories/:categoryId`
-  @UseGuards(JwtAuthGuard)
-  @Get('categories/:categoryName')
-  async getBusinessCategoryByName(
-    @Param('categoryName') categoryName: string,
-  ): Promise<{ message: string; data: BusinessDto[] }> {
-    return await this.businessService.getBusinessCategoryByName(categoryName);
-  }
-
-  // GET `/business/me`
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.BUSINESS_OWNER)
-  @Get('me')
-  async getMyBusinesses(
-    @GetUser('id') ownerId: string,
-  ): Promise<{ message: string; data: BusinessDto[] }> {
-    return await this.businessService.getMyBusinesses(ownerId);
   }
 }
