@@ -203,7 +203,7 @@ export class BusinessController {
   // POST `/business/products/categories`
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
-  @Post('categories')
+  @Post('products/categories')
   async createProductCategory(
     @Body('name') name: string,
     @Body('description') description: string,
