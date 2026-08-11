@@ -679,7 +679,10 @@ export class BusinessService {
           },
         },
       },
-      orderBy: [{ name: 'asc' }, { products: { _count: 'desc' } }, { products: { productReviews: { _count: 'desc' } } }, { products: { productReviews: { rating: 'desc' } } }, { products: { productReviews: { createdAt: 'desc' } } }],
+      orderBy: [
+        { name: 'asc' },
+        { products: { _count: 'desc' } },
+      ],
     });
 
     if (
