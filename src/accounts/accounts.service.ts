@@ -77,7 +77,7 @@ export class AccountsService {
             email: true,
             role: true,
             profilePictureUrl: true,
-            emailVerified: true,
+            emailVerified: true, university: true,
             createdAt: true,
             updatedAt: true,
           },
@@ -85,7 +85,7 @@ export class AccountsService {
 
         if (!newUser)
           throw new InternalServerErrorException(
-            'Failed to create account. Please try again',
+            'Failed to create account',
           );
         await tx.emailVerificationToken.create({
           data: {
@@ -125,7 +125,7 @@ export class AccountsService {
       }
 
       throw new InternalServerErrorException(
-        'Internal Server Error. Please try again',
+        'Internal Server Error',
       );
     }
   }
@@ -161,7 +161,7 @@ export class AccountsService {
 
       const comparePassword = await bcrypt.compare(password, user.password);
       if (!comparePassword)
-        throw new NotFoundException('Invalid credentials. Please try again');
+        throw new NotFoundException('Invalid credentials');
 
       // create user session
       const session = await this.prisma.session.create({
@@ -184,7 +184,7 @@ export class AccountsService {
 
       if (!accessToken && !refreshToken)
         throw new InternalServerErrorException(
-          'Failed to login. Please try again',
+          'Failed to login',
         );
 
       const hashedRefreshToken = await bcrypt.hash(
@@ -230,7 +230,7 @@ export class AccountsService {
         throw error;
       }
       throw new InternalServerErrorException(
-        'Internal Server Error. Please try again',
+        'Internal Server Error. ',
       );
     }
   }
@@ -323,7 +323,7 @@ export class AccountsService {
     const existingMail = await this.prisma.user.findUnique({
       where: { email: newEmail },
     });
-    if (existingMail) throw new BadRequestException('Email is already in use');
+    if (existingMail) throw new BadRequestException('Email already in use');
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString(); // Generate a 6-digit OTP
 
@@ -359,7 +359,7 @@ export class AccountsService {
 
     return {
       message:
-        'Email change request initialized. Please check your email for the OTP',
+        'Check your email for the OTP to confirm your email change request',
     };
   }
 
@@ -455,7 +455,7 @@ export class AccountsService {
 
     return {
       message:
-        'If an account with that email exists, we have sent a password reset code.',
+        'Check your email for the OTP to reset your password',
     };
   }
 
@@ -484,7 +484,7 @@ export class AccountsService {
         where: { id: pendingRequest.id },
       });
       throw new BadRequestException(
-        'OTP has expired. Please request a new one.',
+        'OTP has expired',
       );
     }
 
@@ -517,7 +517,7 @@ export class AccountsService {
     });
 
     return {
-      message: 'Password has been reset successfully. You can now log in.',
+      message: 'Password reset successful',
     };
   }
 
@@ -532,7 +532,7 @@ export class AccountsService {
         email: true,
         firstName: true,
         lastName: true,
-        username: true,
+        username: true, university: true,
         role: true,
         profilePictureUrl: true,
         emailVerified: true,
@@ -544,6 +544,34 @@ export class AccountsService {
     if (!user) throw new NotFoundException('User not found');
 
     return { message: 'User profile retrieved successfully', data: user };
+  }
+
+  async updateProfile(
+    userId: string,
+    updateAccountDto: UpdateAccountDto,
+  ): Promise<{ message: string; data: UserAccountDto }> {
+    const { university } = updateAccountDto;
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: { university }, select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        username: true, university: true,
+        role: true,
+        profilePictureUrl: true,
+        emailVerified: true,
+        createdAt: true,
+        updatedAt: true,
+      }
+    });
+
+
+    return { message: 'User profile updated successfully', data: updatedUser };
   }
 
   // refresh token method
@@ -638,7 +666,7 @@ export class AccountsService {
       });
     });
 
-    return { message: 'Password changed successfully. Please log in again.' };
+    return { message: 'Password changed successfully' };
   }
 
   // verify email method
@@ -670,7 +698,7 @@ export class AccountsService {
         where: { id: pendingVerification.id },
       });
       throw new BadRequestException(
-        'OTP has expired. Please request a new one.',
+        'OTP has expired',
       );
     }
 
@@ -714,7 +742,7 @@ export class AccountsService {
     if (!user) throw new NotFoundException('User not found');
 
     if (user.emailVerified === true)
-      throw new BadRequestException('Email is already verified');
+      throw new BadRequestException('Email already verified');
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const hashedOtp = await bcrypt.hash(otp, this.saltRounds);
@@ -750,7 +778,7 @@ export class AccountsService {
 
     return {
       message:
-        'Otp has been resent. Please check your email for the verification code',
+        'Check your email for the new OTP to verify your email address',
     };
   }
 
@@ -784,7 +812,7 @@ export class AccountsService {
   private async hashPassword(password: string): Promise<string> {
     const hashPwd = await bcrypt.hash(password, this.saltRounds);
 
-    if (!hashPwd) throw new Error('Data processing error. Please try again');
+    if (!hashPwd) throw new Error('Data processing error. ');
     return hashPwd;
   }
 
