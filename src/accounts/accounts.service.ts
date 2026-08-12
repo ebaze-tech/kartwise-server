@@ -283,6 +283,9 @@ export class AccountsService {
   ): Promise<{ message: string; data: UserAccountDto }> {
     const { permanentAddress } = updateAccountDto;
 
+    if (!permanentAddress)
+      throw new BadRequestException('Permanent address is required');
+
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
