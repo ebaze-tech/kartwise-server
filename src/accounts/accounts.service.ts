@@ -276,6 +276,37 @@ export class AccountsService {
     return { message: 'Logout successful' };
   }
 
+  // update account method
+  async updateAccount(
+    userId: string,
+    updateAccountDto: UpdateAccountDto,
+  ): Promise<{ message: string; data: UserAccountDto }> {
+    const { permanentAddress } = updateAccountDto;
+
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        permanentAddress: permanentAddress !== undefined ? permanentAddress : user.permanentAddress,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        username: true,
+        role: true,
+        profilePictureUrl: true,
+        emailVerified: true,
+        permanentAddress: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    return { message: 'Account updated successfully', data: updatedUser };
+  }
   // change email request method
   async changeEmailRequest(
     updateEmailDto: UpdateEmailDto,

@@ -102,11 +102,8 @@ export class AccountsController {
 
   @UseGuards(JwtAuthGuard)
   @Patch('me')
-  async updateProfile(
-    @GetUser('id') userId: string,
-    @Body() updateAccountDto: UpdateAccountDto,
-  ): Promise<{ message: string; data: UserAccountDto }> {
-    return await this.accountsService.updateProfile(userId, updateAccountDto);
+  async updateAccount(@GetUser('id') userId: string, @Body() updateAccountDto: UpdateAccountDto) {
+    return await this.accountsService.updateAccount(userId, updateAccountDto);
   }
 
   @Post('refresh-token')

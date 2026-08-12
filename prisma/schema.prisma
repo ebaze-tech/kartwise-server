@@ -49,6 +49,7 @@ model User {
   password          String
   emailVerified     Boolean   @default(false)
   profilePictureUrl String?
+  permanentAddress  String?
   role              Role
   refreshToken      String?
   otp               String?
@@ -249,7 +250,7 @@ model Product {
   business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   productCategoryName String
-  productCategory   ProductCategory @relation(fields: [productCategoryName], references: [name])
+  productCategory     ProductCategory @relation(fields: [productCategoryName], references: [name])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
