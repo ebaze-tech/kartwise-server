@@ -7,5 +7,5 @@ export class UpdateAccountDto {
   @IsString()
   @IsNotEmpty({ message: "University name is required for account update" })
   @Type(() => String)
-  university?: string;
+  permanentAddress?: string;
 }
