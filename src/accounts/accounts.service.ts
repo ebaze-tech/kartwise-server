@@ -289,7 +289,7 @@ export class AccountsService {
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
       data: {
-        permanentAddress: permanentAddress ?? user.permanentAddress,
+        permanentAddress: permanentAddress !== undefined ? permanentAddress : user.permanentAddress,
       },
       select: {
         id: true,

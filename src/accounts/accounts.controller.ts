@@ -100,6 +100,12 @@ export class AccountsController {
     return await this.accountsService.getProfile(userId);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Patch('me')
+  async updateAccount(@GetUser('id') userId: string, @Body() updateAccountDto: UpdateAccountDto) {
+    return await this.accountsService.updateAccount(userId, updateAccountDto);
+  }
+
   @Post('refresh-token')
   async refreshToken(
     @Body('refreshToken') refreshToken: string,
