@@ -3,7 +3,7 @@ import { CreateAccountDto } from './create-account.dto';
 import { IsOptional, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class UpdateAccountDto extends PartialType(CreateAccountDto) {
+export class UpdateAccountDto {
   @IsString()
   @IsOptional()
   @Type(() => String)
