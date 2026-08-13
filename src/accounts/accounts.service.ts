@@ -545,6 +545,7 @@ export class AccountsService {
         lastName: true,
         username: true,
         role: true,
+        permanentAddress: true,
         profilePictureUrl: true,
         emailVerified: true,
         createdAt: true,
