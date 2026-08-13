@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
@@ -37,6 +37,7 @@ export class CreateBusinessProductDto {
 
   @IsBoolean({ message: 'Product availability must be a boolean value' })
   @Type(() => Boolean)
+  @Transform(({ value }) => value === 'true' || value === true || value === 1 || value === '1')
   isAvailable!: boolean;
 
   @IsNotEmpty({ message: 'Product stock count is required' })
