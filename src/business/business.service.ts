@@ -21,18 +21,18 @@ import e from 'express';
 import { stat } from 'fs';
 import { ProductCategoriesDto } from './dto/product-category.dto';
 
+const allowedMimeTypes = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+]
 @Injectable()
 export class BusinessService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cloudinary: CloudinaryService,
-    private readonly allowedMimeTypes = [
-      'image/jpeg',
-      'image/png',
-      'image/webp',
-      'image/gif',
-      'image/avif',
-    ]
   ) { }
 
 
@@ -86,7 +86,7 @@ export class BusinessService {
 
     if (
       bannerImage &&
-      !this.allowedMimeTypes.includes(bannerImage.mimetype)
+      !allowedMimeTypes.includes(bannerImage.mimetype)
     ) {
       throw new BadRequestException(
         'Invalid banner image format. Only JPEG, PNG, WEBP, GIF, and AVIF are allowed.',
@@ -389,7 +389,7 @@ export class BusinessService {
         'A product with this name already exists for the specified business',
       );
 
-    if (files.images.some(file => !this.allowedMimeTypes.includes(file.mimetype))) {
+    if (files.images.some(file => !allowedMimeTypes.includes(file.mimetype))) {
       throw new BadRequestException(
         'Invalid image format. Only JPEG, PNG, WEBP, GIF, and AVIF are allowed.',
       );

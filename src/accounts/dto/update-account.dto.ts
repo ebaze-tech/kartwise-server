@@ -5,7 +5,7 @@ import { Type } from 'class-transformer';
 
 export class UpdateAccountDto {
   @IsString()
-  @IsNotEmpty({ message: "University name is required for account update" })
+  @IsNotEmpty({ message: "Permanent address is required for account update" })
   @Type(() => String)
   permanentAddress?: string;
 }
