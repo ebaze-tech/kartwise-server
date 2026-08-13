@@ -6,6 +6,7 @@ export class UserAccountDto {
   firstName!: string;
   lastName!: string;
   university?: string | null;
+  permanentAddress?: string | null;
   role!: Role;
   email!: string;
   profilePictureUrl?: string | null;

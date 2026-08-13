@@ -54,7 +54,6 @@ model User {
   refreshToken      String?
   otp               String?
   otpExpiresAt      DateTime?
-  university        String?
 
   resetTokens             PasswordResetToken[]
   emailTokens             EmailUpdateToken[]

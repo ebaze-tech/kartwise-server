@@ -22,19 +22,20 @@ import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ResendVerificationDto } from './dto/resend-otp.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 
+const allowedMimeTypes = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+]
 @Injectable()
 export class AccountsService {
   private readonly saltRounds = 10;
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-    private readonly allowedMimeTypes = [
-      'image/jpeg',
-      'image/png',
-      'image/webp',
-      'image/gif',
-      'image/avif',
-    ]
+
   ) { }
 
   //   create account method
