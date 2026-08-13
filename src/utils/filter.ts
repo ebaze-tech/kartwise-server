@@ -21,15 +21,18 @@ export const fileFilter = (
     'image/jpeg',
     'image/jpg',
     'image/png',
+    'image/webp',
+    'image/gif',
+    'image/avif',
     'video/mp4',
-    'video/quicktime', // for .mov(video)
+    'video/quicktime',
     'application/pdf',
   ];
 
   if (!allowedMimeTypes.includes(file.mimetype)) {
     return callback(
       new BadRequestException(
-        'Invalid file type. Only images, videos (mp4, mov), and PDFs are allowed.',
+        'Invalid file type. Only images (jpg, jpeg, png, webp, gif, avif), videos (mp4, mov), and PDFs are allowed.',
       ),
       false,
     );
