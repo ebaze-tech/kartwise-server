@@ -6,11 +6,11 @@ export const fileFilter = (
   callback: (error: any, valid: boolean) => void,
 ) => {
   // Check file extension
-  const validExtensions = /\.(jpg|jpeg|png|mp4|mov|pdf)$/i;
+  const validExtensions = /\.(jpg|jpeg|png|mp4|mov|pdf|webp|gif|avif)$/i;
   if (!file.originalname.match(validExtensions)) {
     return callback(
       new BadRequestException(
-        'Only image (jpg, jpeg, png), video (mp4, mov), and PDF files are allowed!',
+        'Only image (jpg, jpeg, png, webp, gif, avif), video (mp4, mov), and PDF files are allowed!',
       ),
       false,
     );
