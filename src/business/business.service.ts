@@ -26,7 +26,15 @@ export class BusinessService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cloudinary: CloudinaryService,
+    private readonly allowedMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/gif',
+      'image/avif',
+    ]
   ) { }
+
 
   // create business method
   async createBusiness(
@@ -78,10 +86,10 @@ export class BusinessService {
 
     if (
       bannerImage &&
-      !['image/jpeg', 'image/png'].includes(bannerImage.mimetype)
+      !this.allowedMimeTypes.includes(bannerImage.mimetype)
     ) {
       throw new BadRequestException(
-        'Invalid banner image format. Only JPEG and PNG are allowed.',
+        'Invalid banner image format. Only JPEG, PNG, WEBP, GIF, and AVIF are allowed.',
       );
     }
 
@@ -381,6 +389,12 @@ export class BusinessService {
         'A product with this name already exists for the specified business',
       );
 
+    if (files.images.some(file => !this.allowedMimeTypes.includes(file.mimetype))) {
+      throw new BadRequestException(
+        'Invalid image format. Only JPEG, PNG, WEBP, GIF, and AVIF are allowed.',
+      );
+    }
+
     const newProduct = await this.prisma.$transaction(async (tx) => {
       const product = await tx.product.create({
         data: {
@@ -670,7 +684,7 @@ export class BusinessService {
       data: category,
     };
   }
-  
+
   // get business categories method
   async getBusinessCategories(): Promise<{
     message: string;

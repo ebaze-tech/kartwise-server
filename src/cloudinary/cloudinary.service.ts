@@ -27,7 +27,7 @@ export class CloudinaryService {
       resource_type: 'image',
       overwrite: false,
       unique_filename: true,
-      allowed_formats: ['jpg', 'jpeg', 'png'],
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'],
       transformation: [
         {
           width: 1000,
@@ -60,7 +60,7 @@ export class CloudinaryService {
       resource_type: 'image',
       overwrite: false,
       unique_filename: true,
-      allowed_formats: ['jpg', 'jpeg', 'png'],
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'],
       transformation: [
         {
           width: 1000,
@@ -92,7 +92,7 @@ export class CloudinaryService {
       resource_type: 'image',
       overwrite: false,
       unique_filename: true,
-      allowed_formats: ['jpg', 'jpeg', 'png'],
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'],
       transformation: [
         {
           width: 1000,
