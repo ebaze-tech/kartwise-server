@@ -20,6 +20,7 @@ import { UpdateBusinessDto } from './dto/update-business.dto';
 import e from 'express';
 import { stat } from 'fs';
 import { ProductCategoriesDto } from './dto/product-category.dto';
+import { UpdateBusinessProductDto } from './dto/update-business-product.dto';
 
 const allowedMimeTypes = [
   'image/jpeg',
@@ -453,17 +454,24 @@ export class BusinessService {
     };
   }
 
-  // edit business product status method
-  async editBusinessProductStatus(
-    status: boolean,
+  // edit business product method
+  async editBusinessProduct(
+    updateBusinessProductDto: UpdateBusinessProductDto,
     userId: string,
     productId: string,
   ): Promise<{ message: string }> {
-    if (typeof status !== 'boolean') {
+    const { isAvailable, stockCount } = updateBusinessProductDto;
+    if (isAvailable !== undefined && typeof isAvailable !== 'boolean') {
       throw new BadRequestException(
         'Invalid status value. Must be true or false.',
       );
     }
+    if (stockCount !== undefined && typeof stockCount !== 'number') {
+      throw new BadRequestException(
+        'Invalid stock count value. Must be a number.',
+      );
+    }
+
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
@@ -487,11 +495,11 @@ export class BusinessService {
 
       await tx.product.update({
         where: { id: productId },
-        data: { isAvailable: status },
+        data: { isAvailable: isAvailable, stockCount: stockCount },
       });
     });
 
-    return { message: 'Product status updated successfully' };
+    return { message: 'Product updated successfully' };
   }
 
   // get business products method

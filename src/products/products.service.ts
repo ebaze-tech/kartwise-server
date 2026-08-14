@@ -1,26 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { UnauthorizedException } from "@nestjs/common/exceptions";
+import { ProductsDto } from './dto/products.dto';
 
 @Injectable()
 export class ProductsService {
-  create(createProductDto: CreateProductDto) {
-    return 'This action adds a new product';
-  }
+  constructor(
+    private readonly prisma: PrismaService
+  ) { }
 
-  findAll() {
-    return `This action returns all products`;
-  }
+  // async findProducts(userId: string): Promise<{ message: string, data: ProductsDto[] }> {
+  async findProducts(userId: string) {
+    if (!userId) throw new UnauthorizedException('User not authorized');
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
-  }
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId }
+    })
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
-  }
+    if (!user) throw new UnauthorizedException('User not found');
 
-  remove(id: number) {
-    return `This action removes a #${id} product`;
+    if (user && user.role !== 'BUYER') throw new UnauthorizedException('User not authorized');
+
+    const products = await this.prisma.product.findMany({ select: {
+      id:true, name:true, description:true, price:true, isAvailable:true, stockCount:true, businessId:true, productCategoryName:true, createdAt:true, updatedAt:true,
+      images: { select: { id:true, url:true, publicId:true, productId:true, createdAt:true, updatedAt:true } },
+      productReviews: { select: { id:true, productId:true, rating:true, comment:true, createdAt:true, updatedAt:true } }
+    } })
   }
 }
