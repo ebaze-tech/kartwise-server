@@ -495,7 +495,7 @@ export class BusinessService {
 
       await tx.product.update({
         where: { id: productId },
-        data: { isAvailable: isAvailable, stockCount: stockCount },
+        data: updateBusinessProductDto,
       });
     });
 
