@@ -32,6 +32,7 @@ import {
 import { BusinessCategoriesDto } from './dto/business-category.dto';
 import { UpdateBusinessDto } from './dto/update-business.dto';
 import { ProductCategoriesDto } from './dto/product-category.dto';
+import { UpdateBusinessProductDto } from './dto/update-business-product.dto';
 
 @Controller('business')
 export class BusinessController {
@@ -194,17 +195,17 @@ export class BusinessController {
     return await this.businessService.getBusinessProductById(userId, productId);
   }
 
-  // PATCH `/business/products/:productId/status`
+  // PATCH `/business/products/:productId`
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.BUSINESS_OWNER)
-  @Patch('products/:productId/status')
-  async editBusinessProductStatus(
+  @Patch('products/:productId')
+  async editBusinessProduct(
     @GetUser('id') userId: string,
     @Param('productId') productId: string,
-    @Body('status') status: boolean,
+    @Body() updateBusinessProductDto: UpdateBusinessProductDto,
   ): Promise<{ message: string }> {
-    return await this.businessService.editBusinessProductStatus(
-      status,
+    return await this.businessService.editBusinessProduct(
+      updateBusinessProductDto,
       userId,
       productId,
     );
