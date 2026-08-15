@@ -16,36 +16,36 @@ export class CreateBusinessDto {
   @MinLength(3)
   @MaxLength(100)
   @Type(() => String)
-  name!: string;
+  name: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Business description is required' })
   @MinLength(10)
   @Type(() => String)
-  description!: string;
+  description: string;
 
   @IsEmail()
   @IsNotEmpty({ message: 'Business email address is required' })
   @Type(() => String)
-  emailAddress!: string;
+  emailAddress: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Business phone number is required' })
   @Type(() => String)
-  phoneNumber!: string;
+  phoneNumber: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Business category is required' })
   @Type(() => String)
-  businessCategory!: string;
+  businessCategory: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Business address is required' })
   @Type(() => String)
-  address!: string;
+  address: string;
 
   @Transform(({ value }) => value === 'true' || value === true)
-  @IsNotEmpty({ message: "Business activity status is required" })
+  @IsNotEmpty({ message: 'Business activity status is required' })
   @IsBoolean()
-  isActive!: boolean;
+  isActive: boolean;
 }

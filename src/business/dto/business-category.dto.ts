@@ -1,8 +1,8 @@
 export class BusinessCategoriesDto {
-  id!: string;
-  name!: string;
-  description!: string;
-  businesses!: {
+  id: string;
+  name: string;
+  description: string;
+  businesses: {
     id: string;
     name: string;
     description: string;

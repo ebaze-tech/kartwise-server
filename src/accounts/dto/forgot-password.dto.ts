@@ -6,8 +6,7 @@ export class ForgotPasswordDto {
   @Matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, {
     message: 'Email must be a valid email address',
   })
-  
   @IsNotEmpty({ message: 'Email is required' })
   @Type(() => String)
-  email!: string;
+  email: string;
 }

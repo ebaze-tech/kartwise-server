@@ -17,7 +17,7 @@ export class CreateBusinessProductDto {
     message: 'Product name must be at most 100 characters long',
   })
   @Type(() => String)
-  name!: string;
+  name: string;
 
   @IsNotEmpty({ message: 'Product description is required' })
   @IsString({ message: 'Product description must be a string' })
@@ -28,30 +28,33 @@ export class CreateBusinessProductDto {
     message: 'Product description must be at most 100 characters long',
   })
   @Type(() => String)
-  description!: string;
+  description: string;
 
   @IsNotEmpty({ message: 'Product price is required' })
   @IsNumber({}, { message: 'Product price must be a number' })
   @Type(() => Number)
-  price!: number;
+  price: number;
 
   @IsBoolean({ message: 'Product availability must be a boolean value' })
   @Type(() => Boolean)
-  @Transform(({ value }) => value === 'true' || value === true || value === 1 || value === '1')
-  isAvailable!: boolean;
+  @Transform(
+    ({ value }) =>
+      value === 'true' || value === true || value === 1 || value === '1',
+  )
+  isAvailable: boolean;
 
   @IsNotEmpty({ message: 'Product stock count is required' })
   @IsNumber({}, { message: 'Product stock count must be a number' })
   @Type(() => Number)
-  stockCount!: number;
+  stockCount: number;
 
   @IsNotEmpty({ message: 'Business name is required' })
   @IsString({ message: 'Business name must be a string' })
   @Type(() => String)
-  businessName!: string;
+  businessName: string;
 
   @IsNotEmpty({ message: 'Product category is required' })
   @IsString({ message: 'Product category must be a string' })
   @Type(() => String)
-  productCategoryName!: string;
+  productCategoryName: string;
 }
