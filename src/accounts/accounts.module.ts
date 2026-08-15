@@ -6,10 +6,17 @@ import { JwtModule } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './strategy/jwt.strategy';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Module({
   controllers: [AccountsController],
-  providers: [AccountsService, PrismaService, JwtStrategy, ConfigService],
+  providers: [
+    AccountsService,
+    PrismaService,
+    JwtStrategy,
+    ConfigService,
+    CloudinaryService,
+  ],
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({

@@ -9,7 +9,7 @@ import {
 import { CreateAccountDto } from './dto/create-account.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserAccountDto } from './dto/user-account.dto';
-import { Role } from '@prisma/client';
+import { Role, User } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { LoginAccountDto } from './dto/login-account.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -21,6 +21,8 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ResendVerificationDto } from './dto/resend-otp.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { ProductsDto } from '../products/dto/products.dto';
 
 const allowedMimeTypes = [
   'image/jpeg',
@@ -28,15 +30,16 @@ const allowedMimeTypes = [
   'image/webp',
   'image/gif',
   'image/avif',
-]
+];
+
 @Injectable()
 export class AccountsService {
   private readonly saltRounds = 10;
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-
-  ) { }
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   //   create account method
   async createAccount(
@@ -288,6 +291,7 @@ export class AccountsService {
   async updateAccount(
     userId: string,
     updateAccountDto: UpdateAccountDto,
+    files?: { profilePicture: Express.Multer.File },
   ): Promise<{ message: string; data: UserAccountDto }> {
     const { permanentAddress } = updateAccountDto;
 
@@ -297,26 +301,68 @@ export class AccountsService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    const updatedUser = await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        permanentAddress: permanentAddress !== undefined ? permanentAddress : user.permanentAddress,
-      },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        username: true,
-        role: true,
-        profilePictureUrl: true,
-        emailVerified: true,
-        permanentAddress: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+    if (files?.profilePicture == undefined || files.profilePicture === null) {
+      throw new BadRequestException('Profile picture is required');
+    }
+
+    if (
+      !files?.profilePicture &&
+      !allowedMimeTypes.includes(files?.profilePicture.mimetype)
+    ) {
+      throw new BadRequestException('Invalid profile picture format');
+    }
+
+    const updatedUser = await this.prisma.$transaction(async (tx) => {
+      let uploadedImage: string | null = null;
+      let imagePublicId: string | null = null;
+
+      try {
+        if (files?.profilePicture) {
+          const uploadedResult =
+            await this.cloudinaryService.uploadProfilePicture(
+              files?.profilePicture,
+              user.id,
+            );
+
+          uploadedImage = uploadedResult.url;
+          imagePublicId = uploadedResult.publicId;
+
+          if (uploadedImage) {
+            await tx.user.update({
+              where: { id: userId },
+              data: {
+                ...updateAccountDto,
+                profilePictureUrl: uploadedImage,
+              },
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                username: true,
+                role: true,
+                profilePictureUrl: true,
+                emailVerified: true,
+                permanentAddress: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            });
+          }
+        }
+      } catch (error) {
+        if (imagePublicId) {
+          await this.cloudinaryService.deleteAsset(imagePublicId, 'image');
+        }
+        throw new InternalServerErrorException(
+          'Failed to upload profile imaege',
+        );
+      }
     });
-    return { message: 'Account updated successfully', data: updatedUser };
+    return {
+      message: 'Account updated successfully',
+      data: updatedUser as unknown as UserAccountDto,
+    };
   }
   // change email request method
   async changeEmailRequest(
