@@ -90,16 +90,13 @@ jobs:
 
       # Prisma tasks MUST run before the build if your build relies on the generated Prisma client
       - name: Prisma Migrate
-        run: pnpm dlx prisma migrate dev --preview-feature
-        env:
-          DATABASE_URL: postgresql://neondb_owner:npg_BKxZH5b7NOTi@ep-curly-waterfall-zajjtpdv-pooler.c-2.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+        run: pnpm dlx prisma migrate deploy --preview-feature
+        env: DATABASE_URL:${{ secrets.DATABASE_URL }}
 
       - name: Prisma Generate
         run: pnpm dlx prisma generate
-        env:
-          DATABASE_URL: postgresql://neondb_owner:npg_BKxZH5b7NOTi@ep-curly-waterfall-zajjtpdv-pooler.c-2.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+        env: DATABASE_URL:${{ secrets.DATABASE_URL }}
 
       - name: Build
         run: pnpm run build
-        env:
-          DATABASE_URL: postgresql://neondb_owner:npg_BKxZH5b7NOTi@ep-curly-waterfall-zajjtpdv-pooler.c-2.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+        env: DATABASE_URL:${{ secrets.DATABASE_URL }}
