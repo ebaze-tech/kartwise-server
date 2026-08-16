@@ -1,19 +1,105 @@
-name: NestJS PR Review
+name: Build NestJS Server
 
 on:
+  push:
+    branches: [main]
   pull_request:
-    branches: ['master', 'develop']
+    branches: [main]
 
 jobs:
-  nestjs_review:
-    name: Lint & Test
+  format:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      # 1. Setup pnpm FIRST
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
         with:
-          node-version: '20'
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run test
-      - run: npm run build
+          version: 9 # Use the version of pnpm you prefer
+
+      # 2. Setup Node (it integrates automatically with the pnpm setup above)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm' # Cache pnpm dependencies instead of npm
+
+      # 3. Use pnpm commands
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile # Equivalent to npm ci
+
+      - name: Format
+        run: pnpm run format
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm run lint
+
+  build:
+    needs: [format, lint]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Prisma tasks MUST run before the build if your build relies on the generated Prisma client
+      - name: Prisma Migrate
+        run: pnpm dlx prisma migrate dev --preview-feature
+        env:
+          DATABASE_URL: postgresql://neondb_owner:npg_BKxZH5b7NOTi@ep-curly-waterfall-zajjtpdv-pooler.c-2.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+
+      - name: Prisma Generate
+        run: pnpm dlx prisma generate
+        env:
+          DATABASE_URL: postgresql://neondb_owner:npg_BKxZH5b7NOTi@ep-curly-waterfall-zajjtpdv-pooler.c-2.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+
+      - name: Build
+        run: pnpm run build
+        env:
+          DATABASE_URL: postgresql://neondb_owner:npg_BKxZH5b7NOTi@ep-curly-waterfall-zajjtpdv-pooler.c-2.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
