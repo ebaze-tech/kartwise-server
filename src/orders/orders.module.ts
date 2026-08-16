@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
 import { PrismaService } from '../prisma/prisma.service';
+import { KafkaService } from '../kafka/kafka.service';
 
 @Module({
   controllers: [OrdersController],

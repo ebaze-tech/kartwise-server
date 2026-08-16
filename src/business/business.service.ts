@@ -433,7 +433,7 @@ export class BusinessService {
       }
 
       if (uploadedImages.length > 0) {
-        await tx.productImages.createMany({
+        await tx.productImage.createMany({
           data: uploadedImages.map((image) => ({
             productId: product.id,
             url: image.url,

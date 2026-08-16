@@ -1,26 +1,68 @@
-import { Injectable } from '@nestjs/common';
-import { CreateInventoryDto } from './dto/create-inventory.dto';
-import { UpdateInventoryDto } from './dto/update-inventory.dto';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { OrderCreatedEvent } from './events/order-created.event';
+import { PrismaService } from '../prisma/prisma.service';
+import { updateStockCountDto } from './dto/updated-stockcount.dto';
 
 @Injectable()
 export class InventoryService {
-  create(createInventoryDto: CreateInventoryDto) {
-    return 'This action adds a new inventory';
-  }
+  private readonly logger = new Logger(InventoryService.name);
 
-  findAll() {
-    return `This action returns all inventory`;
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
-  findOne(id: number) {
-    return `This action returns a #${id} inventory`;
-  }
+  async reserveProductStock(event: OrderCreatedEvent): Promise<boolean> {
+    try {
+      const order = await this.prisma.order.findUnique({
+        where: { id: event.orderId },
+        include: {
+          businessOrders: {
+            include: { items: true },
+          },
+        },
+      });
 
-  update(id: number, updateInventoryDto: UpdateInventoryDto) {
-    return `This action updates a #${id} inventory`;
-  }
+      if (!order) {
+        this.logger.error(`Order ${event.orderId} not found`);
+        return false;
+      }
 
-  remove(id: number) {
-    return `This action removes a #${id} inventory`;
+      const allOrderItems = order.businessOrders.flatMap(
+        (businessOrder) => businessOrder.items,
+      );
+
+      await this.prisma.$transaction(async (tx) => {
+        for (const item of allOrderItems) {
+          const product = await tx.product.findUnique({
+            where: { id: item.productId },
+            select: { stockCount: true, name: true },
+          });
+
+          if (!product) throw new Error(`Product ${item.productId} not found`);
+
+          if (product.stockCount < item.quantity)
+            throw new Error(`Insufficient stock for ${product.name}`);
+
+          await tx.product.update({
+            where: {
+              id: item.productId,
+            },
+            data: {
+              stockCount: { decrement: item.quantity },
+              reservedCount: { increment: item.quantity },
+            },
+          });
+        }
+      });
+
+      this.logger.log(`Stock reserved for order ${event.orderId}`);
+      return true;
+    } catch (error) {
+      this.logger.error(`Failed to reserve stock for order ${event.orderId}`);
+      return false;
+    }
   }
 }
