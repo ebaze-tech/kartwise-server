@@ -30,14 +30,10 @@ export class OrdersController {
   }
 
   @EventPattern('inventory.failed')
-  async handleInventoryFailure(
-    @Payload() event: InventoryEvent,
-    @GetUser('id') userId: string,
-  ) {
+  async handleInventoryFailure(@Payload() event: InventoryEvent) {
     await this.ordersService.cancelOrder(
       event.orderId,
       'Inventory reservation failed due to insufficient stock',
-      userId,
     );
   }
 }

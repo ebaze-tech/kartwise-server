@@ -27,9 +27,7 @@ const discount = 0;
 export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
 
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   // method to initialize an order
   async createOrder(
@@ -190,10 +188,7 @@ export class OrdersService {
 
   // method to cancel an order
 
-  async cancelOrder(orderId: string, reason: string, userId: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw new NotFoundException('User not found');
-
+  async cancelOrder(orderId: string, reason: string) {
     try {
       await this.prisma.$transaction(async (tx) => {
         await tx.order.update({
@@ -212,7 +207,6 @@ export class OrdersService {
             payload: {
               orderId: orderId,
               reason: reason,
-              userId: user.id,
             },
           },
         });

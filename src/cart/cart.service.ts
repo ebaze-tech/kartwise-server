@@ -21,7 +21,7 @@ export class CartService {
       throw new ForbiddenException('Access forbidden');
 
     const cart = await this.prisma.cart.upsert({
-      where: { id: user.id },
+      where: { id: userId },
       update: {},
       create: { userId },
       include: {
@@ -78,7 +78,7 @@ export class CartService {
       throw new BadRequestException('Product currently unavailable');
 
     const cart = await this.prisma.cart.upsert({
-      where: { id: user.id },
+      where: { id: userId },
       update: {},
       create: { userId: user.id },
     });
