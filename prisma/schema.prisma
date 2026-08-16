@@ -6,10 +6,6 @@ datasource db {
   provider = "postgresql"
 }
 
-// ============================================================
-// ENUMS
-// ============================================================
-
 enum Role {
   BUSINESS_OWNER
   BUYER
@@ -57,10 +53,6 @@ enum PaymentProvider {
   PAYSTACK
 }
 
-// ============================================================
-// USER
-// ============================================================
-
 model User {
   id                String  @id @default(cuid())
   username          String
@@ -95,10 +87,6 @@ model User {
   @@index([email])
   @@map("users")
 }
-
-// ============================================================
-// AUTHENTICATION / TOKENS
-// ============================================================
 
 model PasswordResetToken {
   id        String   @id @default(cuid())
@@ -161,10 +149,6 @@ model Session {
   @@map("sessions")
 }
 
-// ============================================================
-// EMAIL
-// ============================================================
-
 model SentEmail {
   id String @id @default(cuid())
 
@@ -196,10 +180,6 @@ model SentEmail {
   @@map("sent_emails")
 }
 
-// ============================================================
-// OUTBOX
-// ============================================================
-
 model Outbox {
   id          String       @id @default(cuid())
   topic       String
@@ -215,10 +195,6 @@ model Outbox {
   @@index([topic])
   @@map("outbox")
 }
-
-// ============================================================
-// BUSINESS
-// ============================================================
 
 model Business {
   id             String  @id @default(cuid())
@@ -280,10 +256,6 @@ model BusinessCategory {
   @@index([name])
   @@map("business_categories")
 }
-
-// ============================================================
-// PRODUCT
-// ============================================================
 
 model Product {
   id            String  @id @default(cuid())
@@ -360,10 +332,6 @@ model ProductReview {
   @@map("product_reviews")
 }
 
-// ============================================================
-// CART
-// ============================================================
-
 model Cart {
   id String @id @default(cuid())
 
@@ -397,10 +365,6 @@ model CartItem {
   @@map("cart_items")
 }
 
-// ============================================================
-// ORDER
-// ============================================================
-
 model Order {
   id String @id @default(cuid())
 
@@ -428,10 +392,6 @@ model Order {
   @@index([createdAt])
   @@map("orders")
 }
-
-// ============================================================
-// BUSINESS ORDER
-// ============================================================
 
 model BusinessOrder {
   id String @id @default(cuid())
@@ -464,10 +424,6 @@ model BusinessOrder {
   @@map("business_orders")
 }
 
-// ============================================================
-// ORDER ITEM
-// ============================================================
-
 model OrderItem {
   id String @id @default(cuid())
 
@@ -488,10 +444,6 @@ model OrderItem {
   @@index([productId])
   @@map("order_items")
 }
-
-// ============================================================
-// PAYMENT
-// ============================================================
 
 model Payment {
   id String @id @default(cuid())
