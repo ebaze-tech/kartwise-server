@@ -93,7 +93,7 @@ jobs:
 
       # Prisma tasks MUST run before the build if your build relies on the generated Prisma client
       - name: Prisma Migrate
-        run: pnpm dlx prisma migrate deploy --preview-feature
+        run: pnpm dlx prisma migrate deploy
         env: DATABASE_URL:${{ secrets.DATABASE_URL }}
 
       - name: Prisma Generate
