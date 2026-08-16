@@ -286,12 +286,13 @@ model BusinessCategory {
 // ============================================================
 
 model Product {
-  id          String  @id @default(cuid())
-  name        String
-  description String
-  price       Decimal @db.Decimal(10, 2)
-  isAvailable Boolean @default(true)
-  stockCount  Int     @default(0)
+  id            String  @id @default(cuid())
+  name          String
+  description   String
+  price         Decimal @db.Decimal(10, 2)
+  isAvailable   Boolean @default(true)
+  stockCount    Int     @default(0)
+  reservedCount Int     @default(0)
 
   // Relations
   images         ProductImage[]
@@ -405,13 +406,11 @@ model Order {
 
   status OrderStatus @default(PENDING)
 
-  // Financial snapshot
   subTotal    Decimal @db.Decimal(10, 2)
   deliveryFee Decimal @default(0) @db.Decimal(10, 2)
   discount    Decimal @default(0) @db.Decimal(10, 2)
   totalAmount Decimal @db.Decimal(10, 2)
 
-  // Snapshot of where the order should be delivered
   shippingAddress String
 
   // Relations
