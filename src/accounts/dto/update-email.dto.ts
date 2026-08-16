@@ -8,7 +8,7 @@ export class UpdateEmailDto {
   @Matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, {
     message: 'Current email must be a valid email address',
   })
-  currentEmail!: string;
+  currentEmail: string;
 
   @IsEmail()
   @IsNotEmpty({ message: 'New email is required' })
@@ -16,5 +16,5 @@ export class UpdateEmailDto {
   @Matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, {
     message: 'New email must be a valid email address',
   })
-  newEmail!: string;
+  newEmail: string;
 }

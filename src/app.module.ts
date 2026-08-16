@@ -11,6 +11,9 @@ import { BusinessModule } from './business/business.module';
 import { AdminModule } from './admin/admin.module';
 import { OrdersModule } from './orders/orders.module';
 import { ProductsModule } from './products/products.module';
+import { InventoryModule } from './inventory/inventory.module';
+import { PaymentModule } from './payment/payment.module';
+import { DeliveryModule } from './delivery/delivery.module';
 
 @Module({
   imports: [
@@ -26,6 +29,9 @@ import { ProductsModule } from './products/products.module';
     AdminModule,
     OrdersModule,
     ProductsModule,
+    InventoryModule,
+    PaymentModule,
+    DeliveryModule,
   ],
   controllers: [AppController],
   providers: [],

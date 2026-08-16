@@ -8,10 +8,10 @@ export class LoginAccountDto {
     message: 'Email must be a valid email address',
   })
   @Type(() => String)
-  email!: string;
+  email: string;
 
   @IsNotEmpty({ message: 'Password is required' })
   @IsString()
   @Type(() => String)
-  password!: string;
+  password: string;
 }

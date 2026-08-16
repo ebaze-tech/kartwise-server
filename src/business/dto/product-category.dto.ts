@@ -2,87 +2,87 @@ import { Type } from 'class-transformer';
 import { IsInt, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class ProductImageDto {
-    @IsString()
-    id!: string;
+  @IsString()
+  id: string;
 
-    @IsString()
-    url!: string;
+  @IsString()
+  url: string;
 
-    @IsString()
-    publicId!: string;
+  @IsString()
+  publicId: string;
 
-    @IsString()
-    productId!: string;
+  @IsString()
+  productId: string;
 
-    createdAt!: Date;
-    updatedAt!: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export class ProductReviewDto {
-    @IsString()
-    id!: string;
+  @IsString()
+  id: string;
 
-    @IsInt()
-    rating!: number;
+  @IsInt()
+  rating: number;
 
-    @IsOptional()
-    @IsString()
-    comment!: string | null;
+  @IsOptional()
+  @IsString()
+  comment: string | null;
 
-    @IsString()
-    productId!: string;
+  @IsString()
+  productId: string;
 
-    createdAt!: Date;
-    updatedAt!: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export class ProductDto {
-    @IsString()
-    id!: string;
+  @IsString()
+  id: string;
 
-    @IsString()
-    name!: string;
+  @IsString()
+  name: string;
 
-    @IsString()
-    description!: string;
+  @IsString()
+  description: string;
 
-    @IsNumber()
-    price!: number;
+  @IsNumber()
+  price: number;
 
-    isAvailable!: boolean;
+  isAvailable: boolean;
 
-    @IsInt()
-    stockCount!: number;
+  @IsInt()
+  stockCount: number;
 
-    @IsString()
-    businessId!: string;
+  @IsString()
+  businessId: string;
 
-    @IsString()
-    productCategoryName!: string;
+  @IsString()
+  productCategoryName: string;
 
-    createdAt!: Date;
-    updatedAt!: Date;
+  createdAt: Date;
+  updatedAt: Date;
 
-    @Type(() => ProductImageDto)
-    images!: ProductImageDto[];
+  @Type(() => ProductImageDto)
+  images: ProductImageDto[];
 
-    @Type(() => ProductReviewDto)
-    productReviews!: ProductReviewDto[];
+  @Type(() => ProductReviewDto)
+  productReviews: ProductReviewDto[];
 }
 
 export class ProductCategoriesDto {
-    @IsString()
-    id!: string;
+  @IsString()
+  id: string;
 
-    @IsString()
-    name!: string;
+  @IsString()
+  name: string;
 
-    @IsString()
-    description!: string;
+  @IsString()
+  description: string;
 
-    createdAt!: Date;
-    updatedAt!: Date;
+  createdAt: Date;
+  updatedAt: Date;
 
-    @Type(() => ProductDto)
-    products!: ProductDto[];
+  @Type(() => ProductDto)
+  products: ProductDto[];
 }

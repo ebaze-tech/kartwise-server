@@ -17,7 +17,7 @@ export class CreateAccountDto {
     message: 'Email must be a valid email address',
   })
   @Type(() => String)
-  email!: string;
+  email: string;
 
   @IsNotEmpty({ message: 'Password is required' })
   @IsString()
@@ -26,12 +26,12 @@ export class CreateAccountDto {
       'Password must be at least 8 characters long and contain at least one letter and one number',
   })
   @Type(() => String)
-  password!: string;
+  password: string;
 
   @IsNotEmpty({ message: 'Role is required' })
   @Type(() => String)
   @IsEnum(Role, { message: 'Valid user role required for registration' })
-  role!: Role;
+  role: Role;
 
   @IsNotEmpty({ message: 'First name is required' })
   @IsString()
@@ -40,7 +40,7 @@ export class CreateAccountDto {
       'First name must be between 2 and 50 characters long and can only contain letters',
   })
   @Type(() => String)
-  firstName!: string;
+  firstName: string;
 
   @IsNotEmpty({ message: 'Last name is required' })
   @IsString()
@@ -49,5 +49,5 @@ export class CreateAccountDto {
       'Last name must be between 2 and 50 characters long and can only contain letters',
   })
   @Type(() => String)
-  lastName!: string;
+  lastName: string;
 }

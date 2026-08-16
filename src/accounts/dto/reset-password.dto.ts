@@ -8,12 +8,12 @@ export class ResetPasswordDto {
   @Matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, {
     message: 'Email must be a valid email address',
   })
-  email!: string;
+  email: string;
 
   @IsString()
   @IsNotEmpty({ message: 'OTP is required' })
   @Type(() => String)
-  otp!: string;
+  otp: string;
 
   @IsString()
   @IsNotEmpty({ message: 'New password is required' })
@@ -22,5 +22,5 @@ export class ResetPasswordDto {
     message:
       'New password must be at least 8 characters long and contain at least one letter and one number',
   })
-  newPassword!: string;
+  newPassword: string;
 }

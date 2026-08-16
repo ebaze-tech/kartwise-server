@@ -6,10 +6,10 @@ export class VerifyEmailDto {
   @Length(6, 6, { message: 'OTP must be 6 characters long' })
   @IsNotEmpty({ message: 'OTP is required' })
   @Type(() => String)
-  otp!: string;
+  otp: string;
 
   @IsString()
   @IsNotEmpty({ message: 'OTP is required' })
   @Type(() => String)
-  userId!: string;
+  userId: string;
 }

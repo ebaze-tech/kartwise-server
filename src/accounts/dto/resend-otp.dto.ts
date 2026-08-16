@@ -6,5 +6,5 @@ export class ResendVerificationDto {
   @Matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, {
     message: 'Email must be a valid email address',
   })
-  email!: string;
+  email: string;
 }

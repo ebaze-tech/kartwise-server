@@ -5,7 +5,7 @@ export class ChangePasswordDto {
   @IsString()
   @IsNotEmpty({ message: 'Current password is required' })
   @Type(() => String)
-  currentPassword!: string;
+  currentPassword: string;
 
   @IsString()
   @IsNotEmpty({ message: 'New password is required' })
@@ -15,5 +15,5 @@ export class ChangePasswordDto {
     message:
       'New password must be at least 8 characters long and contain at least one letter, one number, and one special character',
   })
-  newPassword!: string;
+  newPassword: string;
 }
