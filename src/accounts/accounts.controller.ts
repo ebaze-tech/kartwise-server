@@ -8,7 +8,7 @@ import {
   Delete,
   UseGuards,
   UseInterceptors,
-  UploadedFiles,
+  UploadedFile,
 } from '@nestjs/common';
 import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
@@ -24,9 +24,9 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ResendVerificationDto } from './dto/resend-otp.dto';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { fileFilter } from '../utils/filter';
 import { memoryStorage } from 'multer';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('accounts')
 export class AccountsController {
@@ -108,7 +108,7 @@ export class AccountsController {
   @UseGuards(JwtAuthGuard)
   @Patch('me')
   @UseInterceptors(
-    FileFieldsInterceptor([{ name: 'profilePicture', maxCount: 1 }], {
+    FileInterceptor('profilePicture', {
       storage: memoryStorage(),
       fileFilter: fileFilter,
       limits: {
@@ -119,12 +119,12 @@ export class AccountsController {
   async updateAccount(
     @GetUser('id') userId: string,
     @Body() updateAccountDto: UpdateAccountDto,
-    @UploadedFiles() files?: { profilePicture: Express.Multer.File },
+    @UploadedFile() file?: Express.Multer.File,
   ) {
     return await this.accountsService.updateAccount(
       userId,
       updateAccountDto,
-      files,
+      file,
     );
   }
 

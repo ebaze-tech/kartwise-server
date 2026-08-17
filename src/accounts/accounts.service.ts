@@ -289,7 +289,7 @@ export class AccountsService {
   async updateAccount(
     userId: string,
     updateAccountDto: UpdateAccountDto,
-    files?: { profilePicture: Express.Multer.File },
+    file?: Express.Multer.File,
   ): Promise<{ message: string; data: UserAccountDto }> {
     const { permanentAddress } = updateAccountDto;
 
@@ -299,13 +299,13 @@ export class AccountsService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    if (files?.profilePicture == undefined || files.profilePicture === null) {
+    if (file == undefined || file === null) {
       throw new BadRequestException('Profile picture is required');
     }
 
-    console.log(files.profilePicture.mimetype);
+    console.log(file.mimetype);
 
-    if (!allowedMimeTypes.includes(files.profilePicture.mimetype)) {
+    if (!allowedMimeTypes.includes(file.mimetype)) {
       throw new BadRequestException('Invalid profile picture format');
     }
 
@@ -313,31 +313,28 @@ export class AccountsService {
       let uploadedImage: string | null = null;
       let imagePublicId: string | null = null;
 
-      console.log('FILE:', files?.profilePicture);
+      console.log('FILE:', file);
 
       console.log({
-        fieldname: files?.profilePicture?.fieldname,
-        originalname: files?.profilePicture?.originalname,
-        mimetype: files?.profilePicture?.mimetype,
-        size: files?.profilePicture?.size,
-        bufferLength: files?.profilePicture?.buffer?.length,
+        fieldname: file?.fieldname,
+        originalname: file?.originalname,
+        mimetype: file?.mimetype,
+        size: file?.size,
+        bufferLength: file?.buffer?.length,
       });
 
       try {
-        if (files?.profilePicture) {
-          console.log('FILE:', files?.profilePicture);
+        if (file) {
+          console.log('FILE:', file);
           console.log({
-            fieldname: files?.profilePicture?.fieldname,
-            originalname: files?.profilePicture?.originalname,
-            mimetype: files?.profilePicture?.mimetype,
-            size: files?.profilePicture?.size,
-            bufferLength: files?.profilePicture?.buffer?.length,
+            fieldname: file?.fieldname,
+            originalname: file?.originalname,
+            mimetype: file?.mimetype,
+            size: file?.size,
+            bufferLength: file?.buffer?.length,
           });
           const uploadedResult =
-            await this.cloudinaryService.uploadProfilePicture(
-              files?.profilePicture,
-              user.id,
-            );
+            await this.cloudinaryService.uploadProfilePicture(file, user.id);
 
           uploadedImage = uploadedResult.url;
           imagePublicId = uploadedResult.publicId;
