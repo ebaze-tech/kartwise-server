@@ -17,8 +17,6 @@ import {
   BusinessProductDataDto,
 } from './dto/business-product-data.dto';
 import { UpdateBusinessDto } from './dto/update-business.dto';
-import e from 'express';
-import { stat } from 'fs';
 import { ProductCategoriesDto } from './dto/product-category.dto';
 import { UpdateBusinessProductDto } from './dto/update-business-product.dto';
 
@@ -28,14 +26,13 @@ const allowedMimeTypes = [
   'image/webp',
   'image/gif',
   'image/avif',
-]
+];
 @Injectable()
 export class BusinessService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cloudinary: CloudinaryService,
-  ) { }
-
+  ) {}
 
   // create business method
   async createBusiness(
@@ -49,7 +46,8 @@ export class BusinessService {
       address,
       emailAddress,
       businessCategory,
-      phoneNumber, isActive
+      phoneNumber,
+      isActive,
     } = createBusinessDto;
 
     const user = await this.prisma.user.findUnique({ where: { id: ownerId } });
@@ -63,7 +61,10 @@ export class BusinessService {
         'Only business owners can register a business',
       );
 
-    if (typeof isActive !== 'boolean') throw new BadRequestException('Business activity status must be a boolean value');
+    if (typeof isActive !== 'boolean')
+      throw new BadRequestException(
+        'Business activity status must be a boolean value',
+      );
 
     const category = await this.prisma.businessCategory.findFirst({
       where: { name: businessCategory },
@@ -85,10 +86,7 @@ export class BusinessService {
     if (bannerImage && bannerImage.size > 5 * 1024 * 1024)
       throw new BadRequestException('Banner image size exceeds 5MB limit');
 
-    if (
-      bannerImage &&
-      !allowedMimeTypes.includes(bannerImage.mimetype)
-    ) {
+    if (bannerImage && !allowedMimeTypes.includes(bannerImage.mimetype)) {
       throw new BadRequestException(
         'Invalid banner image format. Only JPEG, PNG, WEBP, GIF, and AVIF are allowed.',
       );
@@ -216,7 +214,7 @@ export class BusinessService {
       if (isBusinessOwner.ownerId !== ownerId)
         throw new ForbiddenException('You are not the owner of this business');
 
-      let data: Prisma.BusinessUpdateInput = {};
+      const data: Prisma.BusinessUpdateInput = {};
 
       if (updateBusinessDto.name !== undefined) {
         data.name = updateBusinessDto.name;
@@ -350,8 +348,15 @@ export class BusinessService {
     userId: string,
     files?: { images: Express.Multer.File[] },
   ): Promise<{ message: string; data: BusinessProductDataDto }> {
-    const { name, description, price, isAvailable, stockCount, businessName, productCategoryName } =
-      createBusinessProductDto;
+    const {
+      name,
+      description,
+      price,
+      isAvailable,
+      stockCount,
+      businessName,
+      productCategoryName,
+    } = createBusinessProductDto;
 
     if (files?.images === undefined || files.images === null) {
       throw new BadRequestException('No images uploaded for the product');
@@ -380,7 +385,8 @@ export class BusinessService {
     const productCategory = await this.prisma.productCategory.findUnique({
       where: { name: productCategoryName },
     });
-    if (!productCategory) throw new NotFoundException('Product category not found');
+    if (!productCategory)
+      throw new NotFoundException('Product category not found');
 
     const existingProduct = await this.prisma.product.findFirst({
       where: { AND: [{ name }, { businessId: business.id }] },
@@ -390,7 +396,9 @@ export class BusinessService {
         'A product with this name already exists for the specified business',
       );
 
-    if (files.images.some(file => !allowedMimeTypes.includes(file.mimetype))) {
+    if (
+      files.images.some((file) => !allowedMimeTypes.includes(file.mimetype))
+    ) {
       throw new BadRequestException(
         'Invalid image format. Only JPEG, PNG, WEBP, GIF, and AVIF are allowed.',
       );
@@ -654,7 +662,6 @@ export class BusinessService {
     };
   }
 
-
   async createProductCategory(
     name: string,
     description: string,
@@ -736,14 +743,12 @@ export class BusinessService {
       include: {
         products: {
           include: {
-            productReviews: true, images: true
+            productReviews: true,
+            images: true,
           },
         },
       },
-      orderBy: [
-        { name: 'asc' },
-        { products: { _count: 'desc' } },
-      ],
+      orderBy: [{ name: 'asc' }, { products: { _count: 'desc' } }],
     });
 
     if (
