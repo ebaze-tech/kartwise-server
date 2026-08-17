@@ -303,8 +303,6 @@ export class AccountsService {
       throw new BadRequestException('Profile picture is required');
     }
 
-    console.log(file.mimetype);
-
     if (!allowedMimeTypes.includes(file.mimetype)) {
       throw new BadRequestException('Invalid profile picture format');
     }
@@ -313,26 +311,8 @@ export class AccountsService {
       let uploadedImage: string | null = null;
       let imagePublicId: string | null = null;
 
-      console.log('FILE:', file);
-
-      console.log({
-        fieldname: file?.fieldname,
-        originalname: file?.originalname,
-        mimetype: file?.mimetype,
-        size: file?.size,
-        bufferLength: file?.buffer?.length,
-      });
-
       try {
         if (file) {
-          console.log('FILE:', file);
-          console.log({
-            fieldname: file?.fieldname,
-            originalname: file?.originalname,
-            mimetype: file?.mimetype,
-            size: file?.size,
-            bufferLength: file?.buffer?.length,
-          });
           const uploadedResult =
             await this.cloudinaryService.uploadProfilePicture(file, user.id);
 
