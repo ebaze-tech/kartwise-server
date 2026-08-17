@@ -107,6 +107,15 @@ export class AccountsController {
 
   @UseGuards(JwtAuthGuard)
   @Patch('me')
+  async updateAccount(
+    @GetUser('id') userId: string,
+    @Body() updateAccountDto: UpdateAccountDto,
+  ) {
+    return await this.accountsService.updateAccount(userId, updateAccountDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('me/avatar')
   @UseInterceptors(
     FileInterceptor('profilePicture', {
       storage: memoryStorage(),
@@ -116,16 +125,11 @@ export class AccountsController {
       },
     }),
   )
-  async updateAccount(
+  async updateProfilePicture(
     @GetUser('id') userId: string,
-    @Body() updateAccountDto: UpdateAccountDto,
-    @UploadedFile() file?: Express.Multer.File,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    return await this.accountsService.updateAccount(
-      userId,
-      updateAccountDto,
-      file,
-    );
+    return await this.accountsService.updateProfilePicture(userId, file);
   }
 
   @Post('refresh-token')

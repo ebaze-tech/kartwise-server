@@ -289,7 +289,6 @@ export class AccountsService {
   async updateAccount(
     userId: string,
     updateAccountDto: UpdateAccountDto,
-    file?: Express.Multer.File,
   ): Promise<{ message: string; data: UserAccountDto }> {
     const { permanentAddress } = updateAccountDto;
 
@@ -299,62 +298,65 @@ export class AccountsService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    if (file == undefined || file === null) {
-      throw new BadRequestException('Profile picture is required');
-    }
-
-    if (!allowedMimeTypes.includes(file.mimetype)) {
-      throw new BadRequestException('Invalid profile picture format');
-    }
-
     const updatedUser = await this.prisma.$transaction(async (tx) => {
-      let uploadedImage: string | null = null;
-      let imagePublicId: string | null = null;
+      const updatedUser = await tx.user.update({
+        where: { id: userId },
+        data: updateAccountDto,
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          username: true,
+          role: true,
+          emailVerified: true,
+          permanentAddress: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
 
-      try {
-        if (file) {
-          const uploadedResult =
-            await this.cloudinaryService.uploadProfilePicture(file, user.id);
-
-          uploadedImage = uploadedResult.url;
-          imagePublicId = uploadedResult.publicId;
-
-          if (uploadedImage) {
-            await tx.user.update({
-              where: { id: userId },
-              data: {
-                ...updateAccountDto,
-                profilePictureUrl: uploadedImage,
-              },
-              select: {
-                id: true,
-                email: true,
-                firstName: true,
-                lastName: true,
-                username: true,
-                role: true,
-                profilePictureUrl: true,
-                emailVerified: true,
-                permanentAddress: true,
-                createdAt: true,
-                updatedAt: true,
-              },
-            });
-          }
-        }
-      } catch (error) {
-        console.error(error);
-        if (imagePublicId) {
-          await this.cloudinaryService.deleteAsset(imagePublicId, 'image');
-        }
-        throw new InternalServerErrorException(
-          'Failed to upload profile imaege',
-        );
-      }
+      return updatedUser;
     });
     return {
       message: 'Account updated successfully',
       data: updatedUser as unknown as UserAccountDto,
+    };
+  }
+
+  // update profile picture method
+  async updateProfilePicture(
+    userId: string,
+    file: Express.Multer.File,
+  ): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    await this.prisma.$transaction(async (tx) => {
+      const updatedUser = await tx.user.update({
+        where: { id: userId },
+        data: {
+          profilePictureUrl: file.path,
+        },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          username: true,
+          role: true,
+          emailVerified: true,
+          permanentAddress: true,
+          profilePictureUrl: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      return updatedUser;
+    });
+    return {
+      message: 'Account profile picture updated successfully',
     };
   }
 
