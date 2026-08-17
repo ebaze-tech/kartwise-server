@@ -333,27 +333,51 @@ export class AccountsService {
     if (!user) throw new NotFoundException('User not found');
 
     await this.prisma.$transaction(async (tx) => {
-      const updatedUser = await tx.user.update({
-        where: { id: userId },
-        data: {
-          profilePictureUrl: file.path,
-        },
-        select: {
-          id: true,
-          email: true,
-          firstName: true,
-          lastName: true,
-          username: true,
-          role: true,
-          emailVerified: true,
-          permanentAddress: true,
-          profilePictureUrl: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      });
+      let uploadedImage: string | null = null;
+      let imagePublicId: string | null = null;
 
-      return updatedUser;
+      try {
+        if (file) {
+          const uploadImage = await this.cloudinaryService.uploadProfilePicture(
+            file,
+            user.id,
+          );
+
+          imagePublicId = uploadImage.publicId;
+          uploadedImage = uploadImage.url;
+
+          if (uploadImage) {
+            const updatedUser = await tx.user.update({
+              where: { id: userId },
+              data: {
+                profilePictureUrl: uploadedImage,
+              },
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                username: true,
+                role: true,
+                emailVerified: true,
+                permanentAddress: true,
+                profilePictureUrl: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            });
+
+            return updatedUser;
+          }
+        }
+      } catch (error) {
+        if (imagePublicId) {
+          await this.cloudinaryService.deleteAsset(imagePublicId, 'image');
+        }
+        throw new InternalServerErrorException(
+          'Failed to upload profile picture',
+        );
+      }
     });
     return {
       message: 'Account profile picture updated successfully',
