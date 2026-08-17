@@ -14,7 +14,6 @@ import bcrypt from 'bcryptjs';
 import { LoginAccountDto } from './dto/login-account.dto';
 import { JwtService } from '@nestjs/jwt';
 import { UpdateEmailDto } from './dto/update-email.dto';
-import * as crypto from 'crypto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -22,7 +21,6 @@ import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ResendVerificationDto } from './dto/resend-otp.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { ProductsDto } from '../products/dto/products.dto';
 
 const allowedMimeTypes = [
   'image/jpeg',
@@ -305,10 +303,9 @@ export class AccountsService {
       throw new BadRequestException('Profile picture is required');
     }
 
-    if (
-      !files?.profilePicture &&
-      !allowedMimeTypes.includes(files?.profilePicture.mimetype)
-    ) {
+    console.log(files.profilePicture.mimetype);
+
+    if (!allowedMimeTypes.includes(files.profilePicture.mimetype)) {
       throw new BadRequestException('Invalid profile picture format');
     }
 
@@ -316,8 +313,26 @@ export class AccountsService {
       let uploadedImage: string | null = null;
       let imagePublicId: string | null = null;
 
+      console.log('FILE:', files?.profilePicture);
+
+      console.log({
+        fieldname: files?.profilePicture?.fieldname,
+        originalname: files?.profilePicture?.originalname,
+        mimetype: files?.profilePicture?.mimetype,
+        size: files?.profilePicture?.size,
+        bufferLength: files?.profilePicture?.buffer?.length,
+      });
+
       try {
         if (files?.profilePicture) {
+          console.log('FILE:', files?.profilePicture);
+          console.log({
+            fieldname: files?.profilePicture?.fieldname,
+            originalname: files?.profilePicture?.originalname,
+            mimetype: files?.profilePicture?.mimetype,
+            size: files?.profilePicture?.size,
+            bufferLength: files?.profilePicture?.buffer?.length,
+          });
           const uploadedResult =
             await this.cloudinaryService.uploadProfilePicture(
               files?.profilePicture,
@@ -351,6 +366,7 @@ export class AccountsService {
           }
         }
       } catch (error) {
+        console.error(error);
         if (imagePublicId) {
           await this.cloudinaryService.deleteAsset(imagePublicId, 'image');
         }
@@ -364,6 +380,7 @@ export class AccountsService {
       data: updatedUser as unknown as UserAccountDto,
     };
   }
+
   // change email request method
   async changeEmailRequest(
     updateEmailDto: UpdateEmailDto,

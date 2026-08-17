@@ -36,7 +36,7 @@ import { UpdateBusinessProductDto } from './dto/update-business-product.dto';
 
 @Controller('business')
 export class BusinessController {
-  constructor(private readonly businessService: BusinessService) { }
+  constructor(private readonly businessService: BusinessService) {}
 
   // GET `/business/me`
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -61,7 +61,10 @@ export class BusinessController {
   // GET `/business/products/categories`
   @UseGuards(JwtAuthGuard)
   @Get('products/categories')
-  async getBusinessProductCategories(): Promise<{ message: string; data: ProductCategoriesDto[] }> {
+  async getBusinessProductCategories(): Promise<{
+    message: string;
+    data: ProductCategoriesDto[];
+  }> {
     return await this.businessService.getProductCategories();
   }
 

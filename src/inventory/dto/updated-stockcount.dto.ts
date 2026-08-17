@@ -5,7 +5,7 @@ export class updateStockCountDto {
   name: string;
   businessId: string;
   description: string;
-  price: Number;
+  price: number;
   isAvailable: boolean;
   stockCount: number;
   reservedCount: number;

@@ -10,7 +10,13 @@ export const multerOptions = {
     file: Express.Multer.File,
     cb: (error: Error | null, acceptFile: boolean) => void,
   ) => {
-    const allowedMimeTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/avif'];
+    const allowedMimeTypes = [
+      'image/png',
+      'image/jpeg',
+      'image/webp',
+      'image/gif',
+      'image/avif',
+    ];
 
     if (!allowedMimeTypes.includes(file.mimetype)) {
       return cb(

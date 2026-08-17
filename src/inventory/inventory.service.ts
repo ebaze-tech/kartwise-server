@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { OrderCreatedEvent } from './events/order-created.event';
 import { PrismaService } from '../prisma/prisma.service';
-import { updateStockCountDto } from './dto/updated-stockcount.dto';
 
 @Injectable()
 export class InventoryService {

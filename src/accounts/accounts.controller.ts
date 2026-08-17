@@ -124,7 +124,7 @@ export class AccountsController {
     return await this.accountsService.updateAccount(
       userId,
       updateAccountDto,
-      files
+      files,
     );
   }
 
